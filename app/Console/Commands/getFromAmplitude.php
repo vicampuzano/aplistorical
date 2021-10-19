@@ -4,6 +4,8 @@ namespace App\Console\Commands;
 
 use Illuminate\Console\Command;
 
+use app\Drivers\AmplitudeDownloader;
+
 class getFromAmplitude extends Command
 {
     /**
