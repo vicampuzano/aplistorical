@@ -3,6 +3,7 @@
 namespace App\Console\Commands;
 
 use Illuminate\Console\Command;
+use Illuminate\Support\Facades\Storage;
 use App\Models\MigrationJobs;
 
 class createMigrationJob extends Command
@@ -71,11 +72,19 @@ class createMigrationJob extends Command
         } else {
             $sourceConfig["dateFrom"]=$this->validateDateHour($this->argument('dateFrom'));
         }
+        if (!$sourceConfig['dateFrom']) {
+            $this->error('Date from must have this format 20211231T00.. T00 to T23.');
+            return -1;
+        }
         if ($this->argument('dateTo')===null) {
             $askTo=$this->ask('Please, provide the date & hour to END the migration. Format: YYYYMMDDTHH Ex: 20211018T00 .');
             $sourceConfig["dateTo"]=$this->validateDateHour($askTo);
         } else {
             $sourceConfig["dateTo"]=$this->validateDateHour($this->argument('dateTo'));
+        }
+        if (!$sourceConfig['dateTo']) {
+            $this->error('Date To must have this format 20211231T00.. T00 to T23.');
+            return -1;
         }
         if ($this->option('aak')===null) {
             $sourceConfig["aak"]=$this->ask('Please, provide Amplitude API Key.');
@@ -107,12 +116,21 @@ class createMigrationJob extends Command
         $newJob->preserve_translations=($this->option('preserve-translations')===null?false:true);
         $newJob->parallelize_translations=($this->option('do-not-parallelize')===null?true:false);
         $newJob->save();
-        print_r("New Job stored with id -> ".$newJob->id);
+        
+        $this->info("New Job stored with id -> ".$newJob->id);
+
+        Storage::makeDirectory("migrationJobs/".$newJob->id);
+        Storage::makeDirectory("migrationJobs/".$newJob->id."/tmp");
+        Storage::makeDirectory("migrationJobs/".$newJob->id."/down");
+        Storage::makeDirectory("migrationJobs/".$newJob->id."/down/bk");
+        Storage::makeDirectory("migrationJobs/".$newJob->id."/up");
+        Storage::makeDirectory("migrationJobs/".$newJob->id."/up/bk");
+        Storage::makeDirectory("migrationJobs/".$newJob->id."/log");
+        
         return Command::SUCCESS;
     }
 
     private function validateDateHour($date){
-        return $date;
-        // Devuelve la fecha en formato correcto o null
+        return \DateTime::createFromFormat('Ymd\TH',$date);
     }
 }
