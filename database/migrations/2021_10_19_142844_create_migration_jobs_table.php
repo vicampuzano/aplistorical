@@ -15,18 +15,19 @@ class CreateMigrationJobsTable extends Migration
     {
         Schema::create('migration_jobs', function (Blueprint $table) {
             $table->id();
-            $table->text('job_label')->default("Untitled Migration");
-            $table->json('source_config');
-            $table->json('destination_config');
-            $table->dateTime('last_downloaded');
-            $table->dateTime('last_translated');
-            $table->dateTime('last_uploaded');
+            $table->text('job_label')->default("Untitled Migration")->nullable();
+            $table->json('source_config')->nullable();
+            $table->json('destination_config')->nullable();
+            $table->dateTime('last_downloaded')->nullable();
+            $table->dateTime('last_translated')->nullable();
+            $table->dateTime('last_uploaded')->nullable();
             $table->boolean('preserve_sources')->default(false);
             $table->boolean('preserve_translations')->default(false);
             $table->integer('source_ganularity')->unsigned()->default(0);
             $table->integer('destination_batch')->unsigned()->default(10000);
             $table->integer('sleep_interval')->unsigned()->default(500);
-            $table->boolean('parallelize_translations');
+            $table->boolean('parallelize_translations')->nullable();
+            $table->boolean('completed')->default(false);
             $table->timestamps();
         });
     }
