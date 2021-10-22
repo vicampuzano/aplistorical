@@ -41,6 +41,7 @@ class SdAmplitude
         ]);
 
         if ($this->migrationJob === null) {
+            Log::error("Could not find migration Job with id ".$this->jobid);
             die('MigrationJob not found....');
         }
 
@@ -80,7 +81,6 @@ class SdAmplitude
                     $end = $ld->add(new DateInterval('P1M'));
                     $end = ($end<=$to)?$end:$to;
             }
-            print_r(' Trying to download interval from '.$start->format('Ymd\TH').' to '.$end->format('Ymd\TH').PHP_EOL);
             switch ($this->downloadRange($start->format('Ymd\TH'),$end->format('Ymd\TH'),$this->region)){
                 case 0:
                     $this->migrationJob['last_downloaded']=$end;
@@ -90,14 +90,15 @@ class SdAmplitude
                     $ld = clone $end;
                     break;
                 case 1:
+                    Log::warning('Changing granularity for Job '.$this->jobid.' from '.$granularity.' to '.($granularity+1));
                     $granularity+=1;
                     $end = clone $bend;
                     $ld = clone $bend;
-                    print_r(' Pasamos la granularidad a  '.$granularity.PHP_EOL);
                     $this->migrationJob['source_granularity']=$granularity;
                     $this->migrationJob->save();
                     break;
                 default:
+                    Log::error('Unknown error trying to download files from Amplitude....');
                     // Problema grave descargando datos....        
             }
 
@@ -136,6 +137,7 @@ class SdAmplitude
         ));
         
         try {
+            Log::debug('Trying to download data for job '.$this->jobid.' from '.$start.' to '.$end);
             $response=$client->get($url);
             if ($response->getStatusCode()===400) {
                 // Return file too large
@@ -143,15 +145,18 @@ class SdAmplitude
                 unlink($tmpFile);
                 return 1;
             }
+            Log::debug('Download complete for jobid '.$this->jobid.' from '.$start.' to '.$end);
         } catch (RequestException $e) {
             fclose($handle);
             unlink($tmpFile);
+            Log::error($e);
             return ($e->getResponse()->getStatusCode()===400)?1:2;
         }
         
         fclose($handle);
         unlink($tmpFile);
 
+        Log::debug('Trying to unzip file '.$zipfile);
         $zip = new \ZipArchive;
         if ($zip->open($zipfile) === TRUE) {
             $zip->extractTo($savepath);
@@ -159,6 +164,8 @@ class SdAmplitude
         } else {     
             return 3;
         }
+        Log::debug('Unzip completed for '.$zipfile);
+
 
         if (!$this->preserve_sources) { unlink($zipfile); }
 
