@@ -14,8 +14,8 @@ class createMigrationJob extends Command
      * @var string
      */
     protected $signature = 'aplistorical:createMigrationJob
-        {dateFrom? : Start date in format YYYYMMDDTHH (Ex. 20211018T00) A complete day is between T00 and T23}
-        {dateTo? : End date in format YYYYMMDDTHH (Ex. 20211018T23) A complete day is between T00 and T23} 
+        {dateFrom? : Start date in format YYYYMMDD"T"HH (Ex. 20211018T00) A complete day is between T00 and T23}
+        {dateTo? : End date in format YYYYMMDDTHH (Ex. 20211018"T"23) A complete day is between T00 and T23} 
         {jobName=UntitledMigration : Job name ... } 
         {sourceDriver=amplitude : It defines the data source driver. Currently only amplitude is supported} 
         {destinationDriver=posthog : It defines the destination driver. Currently only posthog is supported} 
@@ -67,7 +67,7 @@ class createMigrationJob extends Command
         }
 
         if ($this->argument('dateFrom')===null) {
-            $askFrom=$this->ask('Please, provide the date & hour to START the migration. Format: YYYYMMDDTHH Ex: 20211018T00 .');
+            $askFrom=$this->ask('Please, provide the date & hour to START the migration. Format: YYYYMMDD"T"HH Ex: 20211018T00 .');
             $sourceConfig["dateFrom"]=$this->validateDateHour($askFrom);
         } else {
             $sourceConfig["dateFrom"]=$this->validateDateHour($this->argument('dateFrom'));
@@ -77,7 +77,7 @@ class createMigrationJob extends Command
             return -1;
         }
         if ($this->argument('dateTo')===null) {
-            $askTo=$this->ask('Please, provide the date & hour to END the migration. Format: YYYYMMDDTHH Ex: 20211018T00 .');
+            $askTo=$this->ask('Please, provide the date & hour to END the migration. Format: YYYYMMDD"T"HH Ex: 20211018T00 .');
             $sourceConfig["dateTo"]=$this->validateDateHour($askTo);
         } else {
             $sourceConfig["dateTo"]=$this->validateDateHour($this->argument('dateTo'));
@@ -131,6 +131,6 @@ class createMigrationJob extends Command
     }
 
     private function validateDateHour($date){
-        return \DateTime::createFromFormat('Ymd\TH',$date);
+        return \DateTime::createFromFormat('Ymd\TH',$date)->format('Ymd\TH');
     }
 }
