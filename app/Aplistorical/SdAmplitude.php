@@ -18,6 +18,7 @@ class SdAmplitude
     protected $ask;
     protected $preserve_sources;
     protected $migrationJob;
+    protected $region="";
 
     public function __construct($jobid)
     {
@@ -47,12 +48,18 @@ class SdAmplitude
         $this->ask = $this->migrationJob["source_config"]["ask"];
         $from = \DateTime::createFromFormat('Ymd\TH',$this->migrationJob['source_config']['dateFrom']);
         $to = \DateTime::createFromFormat('Ymd\TH',$this->migrationJob['source_config']['dateTo']);
-        $ld = (($this->migrationJob['last_downloaded']===null)?(clone $from):$this->migrationJob['last_downloaded'])->sub(new DateInterval('PT1H'));
+        if ($this->migrationJob['last_downloaded']===null || $restart) {
+            $ld = clone $from;
+        } else {
+            $ld = \DateTime::createFromFormat('Y-m-d H:i:s',$this->migrationJob['last_downloaded']);
+        }
         $start = ($ld > $from)?(clone $ld):(clone $from);
+        //$start = $start->sub(new DateInterval('PT1H'));
         $end = (clone $ld);
         $granularity = $this->migrationJob['source_ganularity'];
 
         while (($ld < $to) && $granularity<4) {
+            $bend = clone $ld;
             switch ($granularity) {
                 case 3:
                     // Every hour download
@@ -78,12 +85,15 @@ class SdAmplitude
                 case 0:
                     $this->migrationJob['last_downloaded']=$end;
                     $this->migrationJob->save();
-                    $start = (clone $end);
+                    $start = clone $end;
                     $start = $start->add(new DateInterval('PT1H'));
                     $ld = clone $end;
                     break;
                 case 1:
                     $granularity+=1;
+                    $end = clone $bend;
+                    $ld = clone $bend;
+                    print_r(' Pasamos la granularidad a  '.$granularity.PHP_EOL);
                     $this->migrationJob['source_granularity']=$granularity;
                     $this->migrationJob->save();
                     break;
