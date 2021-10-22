@@ -5,9 +5,11 @@ namespace App\Aplistorical;
 use GuzzleHttp\Client;
 use GuzzleHttp\Exception\RequestException;
 
+use Illuminate\Support\Facades\Log;
 
 use Illuminate\Support\Facades\Storage;
 use App\Models\MigrationJobs;
+use DateInterval;
 
 class SdAmplitude
 {
@@ -32,6 +34,9 @@ class SdAmplitude
 
     public function getData($restart = false)
     {
+        Log::withContext([
+            'jobid' => $this->jobid
+        ]);
         $migrationJob = MigrationJobs::find($this->jobid);
 
         if ($migrationJob === null) {
@@ -40,10 +45,42 @@ class SdAmplitude
 
         $this->aak = $migrationJob["source_config"]["aak"];
         $this->ask = $migrationJob["source_config"]["ask"];
-        $from = $migrationJob['source_config']['dateFrom'];
-        $to = $migrationJob['source_config']['dateTo'];
-        $start = $migrationJob['last_downloaded'];
-        $granularity = $migrationJob['source_ganularity'];
+        $from = \DateTime::createFromFormat('Ymd\TH',$migrationJob['source_config']['dateFrom']);
+        $to = \DateTime::createFromFormat('Ymd\TH',$migrationJob['source_config']['dateTo']);
+        $ld = (($migrationJob['last_downloaded']===null)?(clone $from):$migrationJob['last_downloaded'])->sub(new DateInterval('PT1H'));
+        $start = ($ld > $from)?(clone $ld):(clone $from);
+        $end = (clone $ld);
+        //$granularity = $migrationJob['source_ganularity'];
+        $granularity = 3;
+
+        while ($ld < $to) {
+            switch ($granularity) {
+                case 3:
+                    // Every hour download
+                    $end = $ld->add(new DateInterval('PT1H'));
+                    $end = ($end<=$to)?$end:$to;
+                    break;
+                case 2:
+                    // Every day
+                    $end = $ld->add(new DateInterval('P1D'));
+                    $end = ($end<=$to)?$end:$to;
+                    break;
+                case 1:
+                    // Every week
+                    $end = $ld->add(new DateInterval('P1W'));
+                    $end = ($end<=$to)?$end:$to;
+                    break;
+                default:
+                    $end = $ld->add(new DateInterval('P1M'));
+                    $end = ($end<=$to)?$end:$to;
+            }
+            print_r(' Trying to download interval from '.$start->format('Ymd\TH').' to '.$end->format('Ymd\TH').PHP_EOL);
+
+            $start = (clone $end);
+            $start = $start->add(new DateInterval('PT1H'));
+            $ld = clone $end;
+        }
+
     }
 
     public function downloadRange($start, $end, $region = null)
