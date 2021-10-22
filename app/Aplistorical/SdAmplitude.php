@@ -76,6 +76,7 @@ class SdAmplitude
             }
             print_r(' Trying to download interval from '.$start->format('Ymd\TH').' to '.$end->format('Ymd\TH').PHP_EOL);
 
+
             $start = (clone $end);
             $start = $start->add(new DateInterval('PT1H'));
             $ld = clone $end;
@@ -124,7 +125,7 @@ class SdAmplitude
         } catch (RequestException $e) {
             fclose($handle);
             unlink($tmpFile);
-            return 2;
+            return ($e->getResponse()->getStatusCode()===400)?1:2;
         }
         
         fclose($handle);
