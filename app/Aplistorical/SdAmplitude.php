@@ -17,19 +17,20 @@ class SdAmplitude
     protected $aak;
     protected $ask;
     protected $preserve_sources;
+    protected $migrationJob;
 
     public function __construct($jobid)
     {
         $this->jobid = $jobid;
-        $migrationJob = MigrationJobs::find($this->jobid);
+        $this->migrationJob = MigrationJobs::find($this->jobid);
 
-        if ($migrationJob === null) {
+        if ($this->migrationJob === null) {
             die('MigrationJob not found....');
         }
 
-        $this->aak = $migrationJob["source_config"]["aak"];
-        $this->ask = $migrationJob["source_config"]["ask"];
-        $this->preserve_sources=$migrationJob["preserve_sources"];
+        $this->aak = $this->migrationJob["source_config"]["aak"];
+        $this->ask = $this->migrationJob["source_config"]["ask"];
+        $this->preserve_sources=$this->migrationJob["preserve_sources"];
     }
 
     public function getData($restart = false)
@@ -37,23 +38,21 @@ class SdAmplitude
         Log::withContext([
             'jobid' => $this->jobid
         ]);
-        $migrationJob = MigrationJobs::find($this->jobid);
 
-        if ($migrationJob === null) {
+        if ($this->migrationJob === null) {
             die('MigrationJob not found....');
         }
 
-        $this->aak = $migrationJob["source_config"]["aak"];
-        $this->ask = $migrationJob["source_config"]["ask"];
-        $from = \DateTime::createFromFormat('Ymd\TH',$migrationJob['source_config']['dateFrom']);
-        $to = \DateTime::createFromFormat('Ymd\TH',$migrationJob['source_config']['dateTo']);
-        $ld = (($migrationJob['last_downloaded']===null)?(clone $from):$migrationJob['last_downloaded'])->sub(new DateInterval('PT1H'));
+        $this->aak = $this->migrationJob["source_config"]["aak"];
+        $this->ask = $this->migrationJob["source_config"]["ask"];
+        $from = \DateTime::createFromFormat('Ymd\TH',$this->migrationJob['source_config']['dateFrom']);
+        $to = \DateTime::createFromFormat('Ymd\TH',$this->migrationJob['source_config']['dateTo']);
+        $ld = (($this->migrationJob['last_downloaded']===null)?(clone $from):$this->migrationJob['last_downloaded'])->sub(new DateInterval('PT1H'));
         $start = ($ld > $from)?(clone $ld):(clone $from);
         $end = (clone $ld);
-        //$granularity = $migrationJob['source_ganularity'];
-        $granularity = 3;
+        $granularity = $this->migrationJob['source_ganularity'];
 
-        while ($ld < $to) {
+        while (($ld < $to) && $granularity<4) {
             switch ($granularity) {
                 case 3:
                     // Every hour download
@@ -75,11 +74,23 @@ class SdAmplitude
                     $end = ($end<=$to)?$end:$to;
             }
             print_r(' Trying to download interval from '.$start->format('Ymd\TH').' to '.$end->format('Ymd\TH').PHP_EOL);
+            switch ($this->downloadRange($start->format('Ymd\TH'),$end->format('Ymd\TH'),$this->region)){
+                case 0:
+                    $this->migrationJob['last_downloaded']=$end;
+                    $this->migrationJob->save();
+                    $start = (clone $end);
+                    $start = $start->add(new DateInterval('PT1H'));
+                    $ld = clone $end;
+                    break;
+                case 1:
+                    $granularity+=1;
+                    $this->migrationJob['source_granularity']=$granularity;
+                    $this->migrationJob->save();
+                    break;
+                default:
+                    // Problema grave descargando datos....        
+            }
 
-
-            $start = (clone $end);
-            $start = $start->add(new DateInterval('PT1H'));
-            $ld = clone $end;
         }
 
     }
