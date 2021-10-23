@@ -81,7 +81,8 @@ class Amplitude2Posthog
             'event' => ($amplitudeEvent->event_type === 'Viewed  Page' || $amplitudeEvent->event_type === 'PageVisited' || $amplitudeEvent->event_type === 'pagevisited') ? '$pageview' : $amplitudeEvent->event_type,
             'properties' => array(
                 'distinct_id' => $amplitudeEvent->user_id,
-                'distinctId' => $amplitudeEvent->user_id
+                'distinctId' => $amplitudeEvent->user_id,
+                '$anon_distinct_id' => 'anonUserId-'.$amplitudeEvent->user_id
             )
         );
         if (isset($amplitudeEvent->ip_address)) {
