@@ -30,7 +30,7 @@ class Amplitude2Posthog
         $gzfile = Storage::path('migrationJobs/1/down/158257/158257_2020-12-01_0#277.json.gz');
         $lines = gzfile($gzfile);
         $id = 0;
-        $uindex =array();
+        $uindex = array();
         foreach ($lines as $line) {
             $event = json_decode($line);
             if (!isset($event->user_id) || $event->user_id === '') {
@@ -39,18 +39,18 @@ class Amplitude2Posthog
             if (!isset($uindex[$event->user_id])) {
                 $uindex[$event->user_id] = array();
             }
-            array_push($uindex[$event->user_id],$this->mapProperties($event));
-            if(++$id > $this->batch) {
+            array_push($uindex[$event->user_id], $this->mapProperties($event));
+            if (++$id > $this->batch) {
                 // Hemos completado un batch, ahora hay que enviar y resetear valores ... 
                 //print_r($uindex);
                 $this->processEvents($uindex);
-                $uindex=array();
-                $id=0;
-                usleep($this->wait*1000);
+                $uindex = array();
+                $id = 0;
+                usleep($this->wait * 1000);
                 return true;
             }
         }
-        if($id>0) {
+        if ($id > 0) {
             $this->processEvents($uindex);
         }
     }
@@ -59,7 +59,7 @@ class Amplitude2Posthog
     {
         foreach ($events as $user => $events) {
             //$this->posthog->identify(array('distinctId'=>$user,'properties'=>array()));
-            print_r("[".$user."] Idenfying ...".PHP_EOL);
+            print_r("[" . $user . "] Idenfying ..." . PHP_EOL);
             foreach ($events as $event) {
                 //print_r("[".$user."] ".$event["event"].PHP_EOL);
                 //print_r($event);
@@ -82,7 +82,7 @@ class Amplitude2Posthog
             'properties' => array(
                 'distinct_id' => $amplitudeEvent->user_id,
                 'distinctId' => $amplitudeEvent->user_id,
-                '$anon_distinct_id' => 'anonUserId-'.$amplitudeEvent->user_id
+                '$anon_distinct_id' => 'anonUserId-' . $amplitudeEvent->user_id
             )
         );
         if (isset($amplitudeEvent->ip_address)) {
@@ -132,6 +132,50 @@ class Amplitude2Posthog
 
 
         return $PosthogEvent;
+    }
+
+    public function sendBatch($body)
+    {
+        $body = gzencode($body);
+
+        return $this->sendRequest(
+            $this->phIU.'/batch/',
+            $body,
+            [
+                // Send user agent in the form of {library_name}/{library_version} as per RFC 7231.
+                "User-Agent: {aplistorical/batch}",
+            ]
+        );
+    }
+
+    public function sendRequest(string $url, ?string $payload, array $extraHeaders = [])
+    {
+        $ch = curl_init();
+
+        if (null !== $payload) {
+            curl_setopt($ch, CURLOPT_POSTFIELDS, $payload);
+        }
+
+        $headers = [];
+        $headers[] = 'Content-Type: application/json';
+        $headers[] = 'Content-Encoding: gzip';
+
+        curl_setopt($ch, CURLOPT_HTTPHEADER, array_merge($headers, $extraHeaders));
+        curl_setopt($ch, CURLOPT_URL, $url);
+        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+
+        $httpResponse = curl_exec($ch);
+        $responseCode = curl_getinfo($ch, CURLINFO_RESPONSE_CODE);
+
+        //close connection
+        curl_close($ch);
+
+        if (200 != $responseCode) {
+            // Mierda, gestionar el error.
+        } else {
+            // No ha habido error... 
+        }
+        return $httpResponse;
     }
 
     function getLocaleCodeForDisplayLanguage($name)
