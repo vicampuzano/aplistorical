@@ -15,7 +15,7 @@ class Amplitude2Posthog
     protected $posthog;
 
 
-    public function __construct($phPK, $phIU = 'https://app.posthog.com', $batch = 10000, $wait = 5000)
+    public function __construct($phPK, $phIU = 'https://app.posthog.com', $batch = 100, $wait = 1000)
     {
         $this->phPK = $phPK;
         $this->phIU = $phIU;
@@ -25,12 +25,13 @@ class Amplitude2Posthog
         $this->posthog->init($phPK, array('host' => $phIU));
     }
 
-    public function processFile($file, $bkpath = '')
+    public function processFile(string $file, string $bkpath = '')
     {
-        $gzfile = Storage::path('migrationJobs/1/down/158257/158257_2020-12-01_0#277.json.gz');
-        $lines = gzfile($gzfile);
-        $id = 0;
+        $file = Storage::path('migrationJobs/1/down/158257/158257_2020-12-01_0#277.json.gz');
+        $lines = gzfile($file);
         $uindex = array();
+        print_r("Starting proccessing file ....".PHP_EOL);
+        $count = 0;
         foreach ($lines as $line) {
             $event = json_decode($line);
             if (!isset($event->user_id) || $event->user_id === '') {
@@ -38,51 +39,54 @@ class Amplitude2Posthog
             }
             if (!isset($uindex[$event->user_id])) {
                 $uindex[$event->user_id] = array();
+                array_push($uindex[$event->user_id], $this->mapIdentify($event));
             }
             array_push($uindex[$event->user_id], $this->mapProperties($event));
-            if (++$id > $this->batch) {
-                // Hemos completado un batch, ahora hay que enviar y resetear valores ... 
-                //print_r($uindex);
-                $this->processEvents($uindex);
-                $uindex = array();
-                $id = 0;
-                usleep($this->wait * 1000);
-                return true;
-            }
+            ++$count;
         }
-        if ($id > 0) {
-            $this->processEvents($uindex);
-        }
+        print_r("File processed. $count lines readed .".PHP_EOL);
+        $this->processEvents($uindex);
     }
 
-    protected function processEvents($events)
+    protected function processEvents(array $events, bool $save = false)
     {
+        $batchEvents = array();
+        $count = 0;
         foreach ($events as $user => $events) {
-            //$this->posthog->identify(array('distinctId'=>$user,'properties'=>array()));
-            print_r("[" . $user . "] Idenfying ..." . PHP_EOL);
+            print_r("Processing ".count($events)." for user $user".PHP_EOL);
             foreach ($events as $event) {
-                //print_r("[".$user."] ".$event["event"].PHP_EOL);
-                //print_r($event);
-                $this->posthog->capture($event);
+                array_push($batchEvents, $event);
+                if ($save) {
+                    $this->saveEvent($event);
+                }
+                if (++$count >= $this->batch) {
+                    $this->sendBatch($batchEvents);
+                    $batchEvents = array();
+                    $count = 0;
+                    usleep($this->wait*1000);
+                }
             }
-            $this->posthog->flush();
+        }
+        if ($count > 0) {
+            $this->sendBatch($batchEvents);
         }
     }
 
     protected function mapProperties($amplitudeEvent)
     {
+        $da = new \DateTime($amplitudeEvent->event_time);
+        $convertedTimestamp = $da->format('Y-m-d\TH:i:sO');
         if (!isset($amplitudeEvent->user_id) || $amplitudeEvent->user_id === '') {
             return false;
         }
         $PosthogEvent = array(
             'distinctId' => $amplitudeEvent->user_id,
             'distinct_id' => $amplitudeEvent->user_id,
-            'timestamp' => $amplitudeEvent->event_time,
+            'timestamp' => $convertedTimestamp,
             'event' => ($amplitudeEvent->event_type === 'Viewed  Page' || $amplitudeEvent->event_type === 'PageVisited' || $amplitudeEvent->event_type === 'pagevisited') ? '$pageview' : $amplitudeEvent->event_type,
             'properties' => array(
                 'distinct_id' => $amplitudeEvent->user_id,
-                'distinctId' => $amplitudeEvent->user_id,
-                '$anon_distinct_id' => 'anonUserId-' . $amplitudeEvent->user_id
+                'distinctId' => $amplitudeEvent->user_id
             )
         );
         if (isset($amplitudeEvent->ip_address)) {
@@ -95,10 +99,10 @@ class Amplitude2Posthog
             $PosthogEvent['properties']['$lib_version'] = $amplitudeEvent->version_name;
         }
         if (isset($amplitudeEvent->event_time)) {
-            $PosthogEvent['properties']['$time'] = $amplitudeEvent->event_time;
+            $PosthogEvent['properties']['$time'] = $convertedTimestamp;
         }
         if (isset($amplitudeEvent->event_time)) {
-            $PosthogEvent['properties']['$timestamp'] = $amplitudeEvent->event_time;
+            $PosthogEvent['properties']['$timestamp'] = $convertedTimestamp;
         }
 
         if (isset($amplitudeEvent->device_id)) {
@@ -134,12 +138,47 @@ class Amplitude2Posthog
         return $PosthogEvent;
     }
 
+    protected function mapIdentify($amplitudeEvent)
+    {
+        $da = new \DateTime($amplitudeEvent->event_time);
+        $convertedTimestamp = $da->format('Y-m-d\TH:i:sO');
+
+        if (!isset($amplitudeEvent->user_id) || $amplitudeEvent->user_id === '') {
+            return false;
+        }
+        $PosthogEvent = array(
+            'distinctId' => $amplitudeEvent->user_id,
+            'distinct_id' => $amplitudeEvent->user_id,
+            'timestamp' => $convertedTimestamp,
+            'event' => '$identify',
+            'properties' => array(
+                'distinct_id' => $amplitudeEvent->user_id,
+                'distinctId' => $amplitudeEvent->user_id
+            )
+        );
+        if (isset($amplitudeEvent->ip_address)) {
+            $PosthogEvent['properties']['$ip'] = $amplitudeEvent->ip_address;
+        }
+        if (isset($amplitudeEvent->user_properties)) {
+            $PosthogEvent['properties']['$set'] = array();
+            foreach ($amplitudeEvent->user_properties as $clave => $valor) {
+                $PosthogEvent['properties']['$set'][$clave] = $valor;
+            }
+        }
+        return $PosthogEvent;
+    }
+
     public function sendBatch($body)
     {
-        $body = gzencode($body);
+        $payload = json_encode(array(
+            'batch'=>$body,
+            'api_key'=>$this->phPK
+        ));
+        $body = gzencode($payload);
 
+        print_r("Sending batch events ...");
         return $this->sendRequest(
-            $this->phIU.'/batch/',
+            $this->phIU . '/batch/',
             $body,
             [
                 // Send user agent in the form of {library_name}/{library_version} as per RFC 7231.
@@ -172,10 +211,19 @@ class Amplitude2Posthog
 
         if (200 != $responseCode) {
             // Mierda, gestionar el error.
+            //Log::error('La petición CURL ha devuelto un estado ' . $responseCode . ' con este texto ' . $httpResponse);
+            print_r("Not 200 status code: $responseCode returned. ".json_encode($httpResponse).PHP_EOL);
         } else {
             // No ha habido error... 
+            print_r("Ok events sent with 200 status code...".PHP_EOL);
         }
         return $httpResponse;
+    }
+
+    protected function saveEvent($event)
+    {
+        // Todo : save translated events to file or database
+        return true;
     }
 
     function getLocaleCodeForDisplayLanguage($name)
