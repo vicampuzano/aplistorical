@@ -2,10 +2,7 @@
 
 namespace App\Aplistorical;
 
-use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Log;
-use phpDocumentor\Reflection\Types\Boolean;
-use PostHog\PostHog;
 
 class Amplitude2Posthog
 {
