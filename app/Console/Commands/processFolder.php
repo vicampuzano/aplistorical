@@ -4,6 +4,8 @@ namespace App\Console\Commands;
 
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Storage;
+use App\Aplistorical\Amplitude2Posthog;
+use App\Models\MigrationJobs;
 
 class processFolder extends Command
 {
@@ -39,15 +41,32 @@ class processFolder extends Command
      */
     public function handle()
     {
+        $mj = MigrationJobs::find($this->argument('jobId'));
+        $a2p = new Amplitude2Posthog($mj['destination_config']['ppk'], $mj['destination_config']['piu']);
         $folder = Storage::path("migrationJobs/$this->argument('jobId')/down/");
+        $bkevents = Storage::path("migrationJobs/$this->argument('jobId')/up/bk/upload-$this->argument('jobId').events");
         $allfiles = $this->getAllFiles($folder);
-        
+        $fileCount = count($allfiles);
+
+        $bar = $this->output->createProgressBar($fileCount);
+
+        $this->line("Proccessing files for Job: $this->argument('jobId')");
+        $bar->start();
+        foreach ($allfiles as $file) {
+            if (!$a2p->processFile($file, 'file://' . $bkevents)) {
+                $this->error("File $file processed with errors. Check de log");
+            }
+            unlink($file);
+            $bar->advance();
+        }
+
+        $bar->finish();
+
         return Command::SUCCESS;
     }
 
     protected function getAllFiles($dir)
     {
-
         $result = array();
 
         $cdir = scandir($dir);
@@ -56,7 +75,7 @@ class processFolder extends Command
                 if (is_dir($dir . DIRECTORY_SEPARATOR . $value)) {
                     $result = array_merge($result, $this->getAllFiles($dir . DIRECTORY_SEPARATOR . $value));
                 } else {
-                    if(str_ends_with($value,'json.gz')) {
+                    if (str_ends_with($value, 'json.gz')) {
                         $result[] = $value;
                     }
                 }
