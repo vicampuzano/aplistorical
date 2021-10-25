@@ -30,29 +30,43 @@ class Amplitude2Posthog
         $this->wait = $wait;
         $this->posthog = new \PostHog\PostHog();
         $this->posthog->init($phPK, array('host' => $phIU));
-        $this->saveString='';
+        $this->saveString = '';
     }
 
 
     /**
-     * Esto es una puñetera descripción 
+     * Sets the SaveString param. Could be file://absoulte_path or sqlite://absolutepath
      * 
      * @param string $filepath
      * @param string $type='file'
      * 
      * @return bool
      */
-    public function setSaveString(string $filepath, string $type='file'): bool {
-        if ($type === 'file')
-        {
-            $this->saveString=$filepath;
+    public function setSaveString(string $filepath): bool
+    {
+        if ($this->startsWith($filepath, 'file://') || $this->startsWith($filepath, 'sqlite://')) {
+            $this->saveString = $filepath;
             return true;
         }
         return false;
     }
 
-    
     /**
+     * Return true if $str starts with $startWith
+     * @param string $str
+     * @param string $startWith
+     * 
+     * @return bool
+     */
+    private function startsWith(string $str, string $startWith): bool
+    {
+        $len = strlen($startWith);
+        return (substr($str, 0, $len) === $startWith);
+    }
+
+
+    /**
+     * 
      * @param string $file Absolute path to gzipped file with amplitude events
      * @param string $bkpath Absolute path for backing up fully proccessed files
      * 
@@ -77,6 +91,7 @@ class Amplitude2Posthog
             ++$count;
         }
         Log::debug("Fully processed $count lines from $file . Now start processing events ...");
+
         return $this->processEvents($uindex);
     }
 
@@ -95,19 +110,27 @@ class Amplitude2Posthog
                 if (++$count >= $this->batch) {
                     $this->sendBatch($batchEvents);
                     $batchEvents = array();
-                    $totalcount+=$count;
+                    $totalcount += $count;
                     $count = 0;
-                    usleep($this->wait*1000);
+                    usleep($this->wait * 1000);
                 }
             }
         }
         if ($count > 0) {
             $this->sendBatch($batchEvents);
         }
+        Log::debug("Fully processed $totalcount events from file ...");
+
         return true;
     }
 
-    protected function mapProperties($amplitudeEvent)
+    /**
+     * Translates an Amplitude Event into a Posthog event
+     * @param mixed $amplitudeEvent json decoded Amplitude event array
+     * 
+     * @return array
+     */
+    protected function mapProperties($amplitudeEvent): array
     {
         $da = new \DateTime($amplitudeEvent->event_time);
         $convertedTimestamp = $da->format('Y-m-d\TH:i:sO');
@@ -173,7 +196,15 @@ class Amplitude2Posthog
         return $PosthogEvent;
     }
 
-    protected function mapIdentify($amplitudeEvent)
+
+    /**
+     * Translates Amplitude event into a Posthog identify payload
+     * 
+     * @param mixed $amplitudeEvent
+     * 
+     * @return array
+     */
+    protected function mapIdentify($amplitudeEvent): array
     {
         $da = new \DateTime($amplitudeEvent->event_time);
         $convertedTimestamp = $da->format('Y-m-d\TH:i:sO');
@@ -203,26 +234,44 @@ class Amplitude2Posthog
         return $PosthogEvent;
     }
 
-    public function sendBatch($body)
+    /**
+     * @param array $body
+     * 
+     * @return int httpResponse code . 200 is ok.
+     */
+    public function sendBatch(array $body): int
     {
         $payload = json_encode(array(
-            'batch'=>$body,
-            'api_key'=>$this->phPK
+            'batch' => $body,
+            'api_key' => $this->phPK
         ));
         $body = gzencode($payload);
 
-        print_r("Sending batch events ...");
-        return $this->sendRequest(
+        $retval = $this->sendRequest(
             $this->phIU . '/batch/',
             $body,
             [
                 // Send user agent in the form of {library_name}/{library_version} as per RFC 7231.
                 "User-Agent: {aplistorical/batch}",
+                "Content-Encoding: gzip"
             ]
         );
+
+        if ($retval!==200) {
+            Log::error("Failed batch::: $payload");
+        }
+        return $retval;
     }
 
-    public function sendRequest(string $url, ?string $payload, array $extraHeaders = [])
+    /**
+     * Send batch request to Posthog server. 
+     * @param string $url Full url to Posthog server endpont
+     * @param string $payload
+     * @param array $extraHeaders
+     * 
+     * @return int Response code from curl 
+     */
+    public function sendRequest(string $url, string $payload, array $extraHeaders = []): int
     {
         $ch = curl_init();
 
@@ -232,7 +281,6 @@ class Amplitude2Posthog
 
         $headers = [];
         $headers[] = 'Content-Type: application/json';
-        $headers[] = 'Content-Encoding: gzip';
 
         curl_setopt($ch, CURLOPT_HTTPHEADER, array_merge($headers, $extraHeaders));
         curl_setopt($ch, CURLOPT_URL, $url);
@@ -246,18 +294,23 @@ class Amplitude2Posthog
 
         if (200 != $responseCode) {
             // Mierda, gestionar el error.
-            //Log::error('La petición CURL ha devuelto un estado ' . $responseCode . ' con este texto ' . $httpResponse);
-            print_r("Not 200 status code: $responseCode returned. ".json_encode($httpResponse).PHP_EOL);
-        } else {
-            // No ha habido error... 
-            print_r("Ok events sent with 200 status code...".PHP_EOL);
+            Log::error('La petición CURL ha devuelto un estado ' . $responseCode . ' con este texto ' . json_encode($httpResponse));
         }
         return $httpResponse;
     }
 
-    protected function saveEvent($event)
+    /**
+     * Stores a copy of the event in a file
+     * @param array $event
+     * 
+     * @return bool
+     */
+    protected function saveEvent(array $event): bool
     {
-        // Todo : save translated events to file or database
+        if ('file://'===substr($this->saveString,0,7)) {
+            $savefile = str_replace('file://','',$this->saveString);
+            return file_put_contents($savefile,json_encode($event),FILE_APPEND | LOCK_EX);
+        }
         return true;
     }
 
