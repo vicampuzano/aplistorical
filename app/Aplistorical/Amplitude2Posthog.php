@@ -4,6 +4,7 @@ namespace App\Aplistorical;
 
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Log;
+use phpDocumentor\Reflection\Types\Boolean;
 use PostHog\PostHog;
 
 class Amplitude2Posthog
@@ -13,8 +14,14 @@ class Amplitude2Posthog
     protected $batch;
     protected $wait;
     protected $posthog;
+    protected $saveString;
 
-
+    /**
+     * @param mixed $phPK
+     * @param string $phIU
+     * @param int $batch
+     * @param int $wait
+     */
     public function __construct($phPK, $phIU = 'https://app.posthog.com', $batch = 100, $wait = 1000)
     {
         $this->phPK = $phPK;
@@ -23,18 +30,43 @@ class Amplitude2Posthog
         $this->wait = $wait;
         $this->posthog = new \PostHog\PostHog();
         $this->posthog->init($phPK, array('host' => $phIU));
+        $this->saveString='';
     }
 
-    public function processFile(string $file, string $bkpath = '')
+
+    /**
+     * Esto es una puñetera descripción 
+     * 
+     * @param string $filepath
+     * @param string $type='file'
+     * 
+     * @return bool
+     */
+    public function setSaveString(string $filepath, string $type='file'): bool {
+        if ($type === 'file')
+        {
+            $this->saveString=$filepath;
+            return true;
+        }
+        return false;
+    }
+
+    
+    /**
+     * @param string $file Absolute path to gzipped file with amplitude events
+     * @param string $bkpath Absolute path for backing up fully proccessed files
+     * 
+     * @return bool true if everything was fine
+     */
+    public function processFile(string $file, string $bkpath = ''): bool
     {
-        $file = Storage::path('migrationJobs/1/down/158257/158257_2020-12-01_0#277.json.gz');
         $lines = gzfile($file);
         $uindex = array();
-        print_r("Starting proccessing file ....".PHP_EOL);
         $count = 0;
         foreach ($lines as $line) {
             $event = json_decode($line);
             if (!isset($event->user_id) || $event->user_id === '') {
+                Log::warning("Skipped line on file $file :::: $line");
                 continue;
             }
             if (!isset($uindex[$event->user_id])) {
@@ -44,16 +76,17 @@ class Amplitude2Posthog
             array_push($uindex[$event->user_id], $this->mapProperties($event));
             ++$count;
         }
-        print_r("File processed. $count lines readed .".PHP_EOL);
-        $this->processEvents($uindex);
+        Log::debug("Fully processed $count lines from $file . Now start processing events ...");
+        return $this->processEvents($uindex);
     }
 
-    protected function processEvents(array $events, bool $save = false)
+
+    protected function processEvents(array $events, bool $save = false): bool
     {
         $batchEvents = array();
         $count = 0;
+        $totalcount = 0;
         foreach ($events as $user => $events) {
-            print_r("Processing ".count($events)." for user $user".PHP_EOL);
             foreach ($events as $event) {
                 array_push($batchEvents, $event);
                 if ($save) {
@@ -62,6 +95,7 @@ class Amplitude2Posthog
                 if (++$count >= $this->batch) {
                     $this->sendBatch($batchEvents);
                     $batchEvents = array();
+                    $totalcount+=$count;
                     $count = 0;
                     usleep($this->wait*1000);
                 }
@@ -70,6 +104,7 @@ class Amplitude2Posthog
         if ($count > 0) {
             $this->sendBatch($batchEvents);
         }
+        return true;
     }
 
     protected function mapProperties($amplitudeEvent)
