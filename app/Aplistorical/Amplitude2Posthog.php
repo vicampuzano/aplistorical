@@ -293,7 +293,7 @@ class Amplitude2Posthog
             // Mierda, gestionar el error.
             Log::error('La petición CURL ha devuelto un estado ' . $responseCode . ' con este texto ' . json_encode($httpResponse));
         }
-        return $httpResponse;
+        return $responseCode;
     }
 
     /**
