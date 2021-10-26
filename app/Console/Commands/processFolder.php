@@ -43,14 +43,14 @@ class processFolder extends Command
     {
         $mj = MigrationJobs::find($this->argument('jobId'));
         $a2p = new Amplitude2Posthog($mj['destination_config']['ppk'], $mj['destination_config']['piu']);
-        $folder = Storage::path("migrationJobs/$this->argument('jobId')/down/");
-        $bkevents = Storage::path("migrationJobs/$this->argument('jobId')/up/bk/upload-$this->argument('jobId').events");
+        $folder = Storage::path("migrationJobs/".$this->argument('jobId')."/down/");
+        $bkevents = Storage::path("migrationJobs/".$this->argument('jobId')."/up/bk/upload-".$this->argument('jobId').".events");
         $allfiles = $this->getAllFiles($folder);
         $fileCount = count($allfiles);
 
         $bar = $this->output->createProgressBar($fileCount);
 
-        $this->line("Proccessing files for Job: $this->argument('jobId')");
+        $this->line("Proccessing files for Job: ".$this->argument('jobId'));
         $bar->start();
         foreach ($allfiles as $file) {
             if (!$a2p->processFile($file, 'file://' . $bkevents)) {
@@ -76,7 +76,7 @@ class processFolder extends Command
                     $result = array_merge($result, $this->getAllFiles($dir . DIRECTORY_SEPARATOR . $value));
                 } else {
                     if (str_ends_with($value, 'json.gz')) {
-                        $result[] = $value;
+                        $result[] = $dir.'/'.$value;
                     }
                 }
             }

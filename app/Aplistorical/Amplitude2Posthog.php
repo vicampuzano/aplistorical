@@ -242,6 +242,7 @@ class Amplitude2Posthog
             'batch' => $body,
             'api_key' => $this->phPK
         ));
+
         $body = gzencode($payload);
 
         $retval = $this->sendRequest(
@@ -289,11 +290,11 @@ class Amplitude2Posthog
         //close connection
         curl_close($ch);
 
-        if (200 != $responseCode) {
+        if (200 !== $responseCode) {
             // Mierda, gestionar el error.
             Log::error('La petición CURL ha devuelto un estado ' . $responseCode . ' con este texto ' . json_encode($httpResponse));
         }
-        return $httpResponse;
+        return $responseCode;
     }
 
     /**
