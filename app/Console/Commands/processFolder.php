@@ -44,6 +44,8 @@ class processFolder extends Command
         $mj = MigrationJobs::find($this->argument('jobId'));
         $a2p = new Amplitude2Posthog($mj['destination_config']['ppk'], $mj['destination_config']['piu'],$mj['destination_batch'],$mj['sleep_interval']);
         $folder = Storage::path("migrationJobs/".$this->argument('jobId')."/down/");
+        $failedPayloads = Storage::path("migrationJobs/".$this->argument('jobId')."/up/failedSends.json");
+        $a2p->setFailedFile($failedPayloads);
         $bkevents = Storage::path("migrationJobs/".$this->argument('jobId')."/up/bk/upload-".$this->argument('jobId').".events");
         $allfiles = $this->getAllFiles($folder);
         $fileCount = count($allfiles);

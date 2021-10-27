@@ -3,6 +3,7 @@
 namespace App\Aplistorical;
 
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Storage;
 
 class Amplitude2Posthog
 {
@@ -12,6 +13,7 @@ class Amplitude2Posthog
     protected $wait;
     protected $posthog;
     protected $saveString;
+    protected $failedFile;
 
     /**
      * @param mixed $phPK
@@ -28,6 +30,7 @@ class Amplitude2Posthog
         $this->posthog = new \PostHog\PostHog();
         $this->posthog->init($phPK, array('host' => $phIU));
         $this->saveString = '';
+        $this->failedFile = '';
     }
 
 
@@ -49,6 +52,18 @@ class Amplitude2Posthog
     }
 
     /**
+     * 
+     * 
+     * @param string $filename
+     * 
+     * @return bool
+     */
+    public function setFailedFile(string $filename): bool
+    {
+        return $this->failedFile = $filename;
+    }
+
+    /**
      * Return true if $str starts with $startWith
      * @param string $str
      * @param string $startWith
@@ -65,11 +80,10 @@ class Amplitude2Posthog
     /**
      * 
      * @param string $file Absolute path to gzipped file with amplitude events
-     * @param string $bkpath Absolute path for backing up fully proccessed files
      * 
      * @return bool true if everything was fine
      */
-    public function processFile(string $file, string $bkpath = ''): bool
+    public function processFile(string $file): bool
     {
         $lines = gzfile($file);
         $uindex = array();
@@ -259,7 +273,12 @@ class Amplitude2Posthog
         );
 
         if ($retval !== 200) {
-            Log::error("Failed batch::: $payload");
+            if ($this->failedFile !== '') {
+                $this->saveFailed($payload);
+                Log::error("Failed batch because a response code " . $retval . ". Please check " . $this->failedFile);
+            } else {
+                Log::error("Failed batch::: $payload");
+            }
         }
         return $retval;
     }
@@ -313,6 +332,17 @@ class Amplitude2Posthog
             return file_put_contents($savefile, json_encode($event), FILE_APPEND | LOCK_EX);
         }
         return true;
+    }
+
+    /**
+     * Stores a copy of the event in a file
+     * @param array $event
+     * 
+     * @return bool
+     */
+    protected function saveFailed(string $payload): bool
+    {
+        return file_put_contents($this->failedFile, $payload, FILE_APPEND | LOCK_EX);
     }
 
     function getLocaleCodeForDisplayLanguage($name)
