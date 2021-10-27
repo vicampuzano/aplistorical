@@ -46,7 +46,10 @@ class processFolder extends Command
         $folder = Storage::path("migrationJobs/".$this->argument('jobId')."/down/");
         $failedPayloads = Storage::path("migrationJobs/".$this->argument('jobId')."/up/failedSends.json");
         $a2p->setFailedFile($failedPayloads);
-        $bkevents = Storage::path("migrationJobs/".$this->argument('jobId')."/up/bk/upload-".$this->argument('jobId').".events");
+        $bkevents = 'file://'.Storage::path("migrationJobs/".$this->argument('jobId')."/up/bk/upload-".$this->argument('jobId').".events");
+        if ($mj['preserve_translations']) {
+            $a2p->setSaveString($bkevents);
+        }
         $allfiles = $this->getAllFiles($folder);
         $fileCount = count($allfiles);
 

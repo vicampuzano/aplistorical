@@ -13,6 +13,7 @@ class Amplitude2Posthog
     protected $wait;
     protected $posthog;
     protected $saveString;
+    protected $saveType;
     protected $failedFile;
 
     /**
@@ -44,8 +45,13 @@ class Amplitude2Posthog
      */
     public function setSaveString(string $filepath): bool
     {
-        if ($this->startsWith($filepath, 'file://') || $this->startsWith($filepath, 'sqlite://')) {
-            $this->saveString = $filepath;
+        if ('file://' === substr($filepath, 0, 7)) {
+            $this->saveString = str_replace('file://', '', $filepath);
+            $this->saveType = "f"; // File type
+            return true;
+        } elseif ('sqlite://' === substr($filepath, 0, 9)) {
+            $this->saveString = str_replace('sqlite://', '', $filepath);
+            $this->saveType = "d"; // DbType type
             return true;
         }
         return false;
@@ -103,7 +109,7 @@ class Amplitude2Posthog
         }
         Log::debug("Fully processed $count lines from $file . Now start processing events ...");
 
-        return $this->processEvents($uindex);
+        return $this->processEvents($uindex, ($this->saveString !== ''));
     }
 
 
@@ -327,11 +333,9 @@ class Amplitude2Posthog
      */
     protected function saveEvent(array $event): bool
     {
-        if ('file://' === substr($this->saveString, 0, 7)) {
-            $savefile = str_replace('file://', '', $this->saveString);
-            return file_put_contents($savefile, json_encode($event), FILE_APPEND | LOCK_EX);
+        if ($this->saveType === 'f') {
+            return file_put_contents($this->saveString, json_encode($event), FILE_APPEND | LOCK_EX);
         }
-        return true;
     }
 
     /**
