@@ -24,8 +24,8 @@ class CreateMigrationJobsTable extends Migration
             $table->boolean('preserve_sources')->default(false);
             $table->boolean('preserve_translations')->default(false);
             $table->integer('source_ganularity')->unsigned()->default(0);
-            $table->integer('destination_batch')->unsigned()->default(10000);
-            $table->integer('sleep_interval')->unsigned()->default(500);
+            $table->integer('destination_batch')->unsigned()->default(1000);
+            $table->integer('sleep_interval')->unsigned()->default(1000);
             $table->boolean('parallelize_translations')->nullable();
             $table->boolean('completed')->default(false);
             $table->timestamps();
