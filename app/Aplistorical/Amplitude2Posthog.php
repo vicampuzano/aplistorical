@@ -138,6 +138,7 @@ class Amplitude2Posthog
             'distinctId' => $amplitudeEvent->user_id,
             'distinct_id' => $amplitudeEvent->user_id,
             'timestamp' => $convertedTimestamp,
+            'type' => 'capture',
             'event' => ($amplitudeEvent->event_type === 'Viewed  Page' || $amplitudeEvent->event_type === 'PageVisited' || $amplitudeEvent->event_type === 'pagevisited') ? '$pageview' : $amplitudeEvent->event_type,
             'properties' => array(
                 'distinct_id' => $amplitudeEvent->user_id,
@@ -214,6 +215,7 @@ class Amplitude2Posthog
             'distinct_id' => $amplitudeEvent->user_id,
             'timestamp' => $convertedTimestamp,
             'event' => '$identify',
+            'type' => 'identify',
             'properties' => array(
                 'distinct_id' => $amplitudeEvent->user_id,
                 'distinctId' => $amplitudeEvent->user_id
