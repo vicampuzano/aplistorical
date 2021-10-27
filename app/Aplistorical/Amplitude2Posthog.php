@@ -19,7 +19,7 @@ class Amplitude2Posthog
      * @param int $batch
      * @param int $wait
      */
-    public function __construct($phPK, $phIU = 'https://app.posthog.com', $batch = 100, $wait = 1000)
+    public function __construct($phPK, $phIU = 'https://app.posthog.com', $batch = 1000, $wait = 1000)
     {
         $this->phPK = $phPK;
         $this->phIU = $phIU;
