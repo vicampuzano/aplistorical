@@ -43,7 +43,7 @@ class getFromAmplitude extends Command
     {
         $sdamp = new SdAmplitude($this->argument('jobId'));
         $this->line("Ok, let's download all files ... It willl take a few minutes. Be patient.");
-        $this->line("Please, check the logs for debug info...");
+        $this->line("Please, check the logs for debug info: tail -f storage/logs/laravel.log");
         $sdamp->getData();
         $this->info("Process completed!");
         return Command::SUCCESS;
