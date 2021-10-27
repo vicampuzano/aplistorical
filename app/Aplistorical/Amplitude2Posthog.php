@@ -115,6 +115,7 @@ class Amplitude2Posthog
         }
         if ($count > 0) {
             $this->sendBatch($batchEvents);
+            $totalcount += $count;
         }
         Log::debug("Fully processed $totalcount events from file ...");
 
@@ -257,7 +258,7 @@ class Amplitude2Posthog
             ]
         );
 
-        if ($retval!==200) {
+        if ($retval !== 200) {
             Log::error("Failed batch::: $payload");
         }
         return $retval;
@@ -307,9 +308,9 @@ class Amplitude2Posthog
      */
     protected function saveEvent(array $event): bool
     {
-        if ('file://'===substr($this->saveString,0,7)) {
-            $savefile = str_replace('file://','',$this->saveString);
-            return file_put_contents($savefile,json_encode($event),FILE_APPEND | LOCK_EX);
+        if ('file://' === substr($this->saveString, 0, 7)) {
+            $savefile = str_replace('file://', '', $this->saveString);
+            return file_put_contents($savefile, json_encode($event), FILE_APPEND | LOCK_EX);
         }
         return true;
     }
