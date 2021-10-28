@@ -6,12 +6,6 @@ This tool helps you migrate your historical data from Amplitude to Posthog.
 It is based on Laravel.
 
 ## Important notes before start
-<p align=“center”>
-  <img src="https://metricool.com/wp-content/uploads/metricool-logo-reduced-21.png" />
-</p>
-
-This tool is created and maintained by Víctor Campuzano, Head of Growth at [Metricool](https://metricool.com) .
-
 **This tool is currently in beta**. We have done some tests in production environments and everything was fine. But, we can’t ensure you this will happen in your particular scenario. Please, **check the complete migration in a testing environment before doing it in the production one**.
 
 **Ensure you have been set the same timezone in both your Amplitude and Posthog projects** to avoid having discrepancies caused by timezone offsets.
@@ -19,8 +13,13 @@ This tool is created and maintained by Víctor Campuzano, Head of Growth at [Met
 
 
 ## Amplitude to Posthog migration process
+3 steps are needed to perform a complete migration process.
 
+1. Download all data from Amplitude.
+2. Translate events from Amplitude format to Posthog format.
+3. Upload events to your Posthog project.
 
+**This is how you’ll do it:**
 
 ### 1. Create a Migration Job
 A Migration Job is a set of configurations related to the migration for one Amplitude project to one Posthog project. With a Migration Job you’ll define from what date to start retrieving data from Amplitude and when to stop.
@@ -83,7 +82,7 @@ We also use `$pageview`as the `event`in Posthog when the `event_type`equals `Vie
 
 ## Artisan Commands
 
-### aplistorical:createMigrationJob
+### 🖲 aplistorical:createMigrationJob
 Use this command to create a Migration Job by providing date from, date to and all the information to connect with both source and destination. 
 
 You will receive a Migration Job ID that should be used for downloading and processing events.
@@ -120,7 +119,7 @@ aplistorical:createMigrationJob [options] [--] [<dateFrom> [<dateTo> [<jobName> 
 | `-q`, `--quiet`  | Do not output any message |
 | `-V`, `--version`  | Display this application version |
 
-### aplistorical:getFromAmplitude
+### 🖲 aplistorical:getFromAmplitude
 Connects with Amplitude and downloads all data for a specified Migration Job.
 
 #### Usage:
@@ -143,7 +142,7 @@ aplistorical:getFromAmplitude <jobId>
 | `-V`, `--version`  | Display this application version |
 
 
-### aplistorical:processFolder
+### 🖲 aplistorical:processFolder
 Takes, translates and uploads all downloaded files for a specified Migration Job 
 
 #### Usage:
@@ -162,3 +161,21 @@ aplistorical:processFolder <jobId>
 | `-h`, `--help`  | Display help for the given command. When no command is given display help for the list command |
 | `-q`, `--quiet`  | Do not output any message |
 | `-V`, `--version`  | Display this application version |
+
+## Useful Links
+What is Posthog? 👉 [PostHog - Open-Source Product Analytics](https://posthog.com/)
+
+Learn how to deply a clean Laravel Sail installation 👉 [Installation - Laravel - The PHP Framework For Web Artisans](https://laravel.com/docs/8.x/installation#your-first-laravel-project)
+
+Laravel Sail Docs 👉 [Laravel Sail - Laravel - The PHP Framework For Web Artisans](https://laravel.com/docs/8.x/sail)
+
+What is Metricool? 👉 [Metricool](https://metricool.com/)
+
+
+
+## Credits
+<p align=“center”>
+  <img src=“https://metricool.com/wp-content/uploads/metricool-logo-reduced-21.png" />
+</p>
+
+This tool is created and maintained by Víctor Campuzano, Head of Growth at [Metricool](https://metricool.com) .
