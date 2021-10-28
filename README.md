@@ -1,7 +1,28 @@
-# Aplistorical README.MD
+# Aplistorical: Amplitude to Posthog migration tool
+_“Aplistorical" sounds like “ahistorical" because it prevents you to be lacking historical perspective or context._ 😬
+
+This tool helps you migrate your historical data from Amplitude to Posthog.
+
+It is based on Laravel.
+
+## Important notes before start
+<p align=“center”>
+  <img src="https://metricool.com/wp-content/uploads/metricool-logo-reduced-21.png" />
+</p>
+
+This tool is created and maintained by Víctor Campuzano, Head of Growth at [Metricool](https://metricool.com) .
+
+**This tool is currently in beta**. We have done some tests in production environments and everything was fine. But, we can’t ensure you this will happen in your particular scenario. Please, **check the complete migration in a testing environment before doing it in the production one**.
+
+**Ensure you have been set the same timezone in both your Amplitude and Posthog projects** to avoid having discrepancies caused by timezone offsets.
+
+
 
 ## Amplitude to Posthog migration process
-### Create a Migration Job
+
+
+
+### 1. Create a Migration Job
 A Migration Job is a set of configurations related to the migration for one Amplitude project to one Posthog project. With a Migration Job you’ll define from what date to start retrieving data from Amplitude and when to stop.
 
 Also, a Migration Job stores the API keys and other information needed to do all work.
@@ -15,14 +36,14 @@ You’ll be asked for all the information needed to create the Migration Job.
 
 You can also specify all the information using parameters and options. See bellow  `(or use the -h option)`  to a full description of this command.
 
-### Download all files using the Amplitude export API
+### 2. Download all files using the Amplitude export API
 By using the command `sail artisan aplistorical:getFromAmplitude {jobIb}` command, a backup of all your Amplitude events will be downloaded and stored in the `storage/app/migrationJobs/{jobIb}/down/` folder.
 
 Depending on your events volume and the time range, this task takes a while for downloading and unzipping all files. 
 
 Showing a progress bar is currently in the “ToDo” list but you can check the `laravel.log` file for debug information.
 
-### Process all files and send events to Posthog
+### 3. Process all files and send events to Posthog
 Since you have all files downloaded and unzipped, you should process them to translate Amplitude events to Posthog events and send them to a Posthog server.
 
 You can start the process by using:
@@ -63,8 +84,81 @@ We also use `$pageview`as the `event`in Posthog when the `event_type`equals `Vie
 ## Artisan Commands
 
 ### aplistorical:createMigrationJob
+Use this command to create a Migration Job by providing date from, date to and all the information to connect with both source and destination. 
+
+You will receive a Migration Job ID that should be used for downloading and processing events.
+
+#### Usage:
+```
+aplistorical:createMigrationJob [options] [--] [<dateFrom> [<dateTo> [<jobName> [<sourceDriver> [<destinationDriver>]]]]]
+```
+
+**Arguments:**
+| Argument | Description |
+| --- | --- |
+ `dateFrom` | Start date in format YYYYMMDD"T"HH (Ex. 20211018T00) A complete day is between T00 and T23 |
+| `dateTo` | End date in format YYYYMMDDTHH (Ex. 20211018"T"23) A complete day is between T00 and T23 |
+| `jobName` |  Job name ... _[default: "UntitledMigration”]_
+| `sourceDriver` | Defines the data source driver. Currently only Amplitude is supported _[default: "amplitude”]_ |
+| `destinationDriver` | Defines the destination driver. Currently only Posthog is supported _[default: "posthog”]_ |
 
 
-## License
+**Options:**
+| Option | Description |
+| --- | --- |
+| `—aak[=AAK]` | Amplitude API Key. |
+| `--ask[=ASK]` | Amplitude Secret Key |
+| `--preserve-sources` | Do not delete downloaded files after processing it |
+| `--ppk[=PPK]` | Posthog Project API Key |
+| `—piu[=PIU]` | Posthog Instance Url |
+|  `—preserve-translations` | Store translated events into a backup file |
+| `--do-not-parallelize` | Disable parallel translation jobs. Note: parallelizing is currently not supported. |
+| `--destination-batch[=DESTINATION-BATCH]` | How many events should be sent per destination API call. _Default: 1000_ |
+| `—sleep-interval[=SLEEP-INTERVAL]` | Sleeping time in milliseconds between destination batches. _Default is 1000_ |
+| `--ssl-strict` | Do not ignore SSL certificate issues when connecting with both source and destination. |
+| `-h`, `--help`  | Display help for the given command. When no command is given display help for the list command |
+| `-q`, `--quiet`  | Do not output any message |
+| `-V`, `--version`  | Display this application version |
 
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+### aplistorical:getFromAmplitude
+Connects with Amplitude and downloads all data for a specified Migration Job.
+
+#### Usage:
+```
+aplistorical:getFromAmplitude <jobId>
+```
+
+**Arguments:**
+| Argument | Description |
+| --- | --- |
+ `jobId` | Job id to download files from Amplitude |
+
+
+
+**Options:**
+| Option | Description |
+| --- | --- |
+| `-h`, `--help`  | Display help for the given command. When no command is given display help for the list command |
+| `-q`, `--quiet`  | Do not output any message |
+| `-V`, `--version`  | Display this application version |
+
+
+### aplistorical:processFolder
+Takes, translates and uploads all downloaded files for a specified Migration Job 
+
+#### Usage:
+```
+aplistorical:processFolder <jobId>
+```
+
+**Arguments:**
+| Argument | Description |
+| --- | --- |
+ `jobId` | JobId to identify source folder and update project status |
+
+**Options:**
+| Option | Description |
+| --- | --- |
+| `-h`, `--help`  | Display help for the given command. When no command is given display help for the list command |
+| `-q`, `--quiet`  | Do not output any message |
+| `-V`, `--version`  | Display this application version |
