@@ -41,7 +41,7 @@ Every single file is deleted after be processed.
 Every Amplitude event is translated to a Posthog event using this properties concordance.
 
 | Amplitude JSON property | Posthog JSON property |
-| — | —|
+| --- | --- |
 | `user_id` | `distinct_id` |
 | `event_time` | `timestamp` , `properties.$time`  and `properties.$timestamp`|
 | `event_type` | `event` |
@@ -63,9 +63,6 @@ We also use `$pageview`as the `event`in Posthog when the `event_type`equals `Vie
 ## Artisan Commands
 
 ### aplistorical:createMigrationJob
-
-
-
 
 
 ## License
