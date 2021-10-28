@@ -17,22 +17,22 @@ class createMigrationJob extends Command
         {dateFrom? : Start date in format YYYYMMDD"T"HH (Ex. 20211018T00) A complete day is between T00 and T23}
         {dateTo? : End date in format YYYYMMDDTHH (Ex. 20211018"T"23) A complete day is between T00 and T23} 
         {jobName=UntitledMigration : Job name ... } 
-        {sourceDriver=amplitude : It defines the data source driver. Currently only amplitude is supported} 
-        {destinationDriver=posthog : It defines the destination driver. Currently only posthog is supported} 
+        {sourceDriver=amplitude : Defines the data source driver. Currently only Amplitude is supported} 
+        {destinationDriver=posthog : Defines the destination driver. Currently only Posthog is supported} 
 
-        {--aak= : Amplitude Api Key} 
+        {--aak= : Amplitude API Key} 
         {--ask= : Amplitude Secret Key} 
-        {--preserve-sources : Do not delete downloaded files after process it } 
+        {--preserve-sources : Do not delete downloaded files after processing it } 
 
-        {--ppk= : Posthog Project Api Key} 
+        {--ppk= : Posthog Project API Key} 
         {--piu= : Posthog Instance Url} 
-        {--preserve-translations : Do not delete translated files after process it } 
-        {--do-not-parallelize : Disable parallel translation jobs } 
+        {--preserve-translations : Store translated events into a backup file } 
+        {--do-not-parallelize : Disable parallel translation jobs. Note: parallelizing is currently not supported. } 
 
         {--destination-batch= : How many events should be sent per destination API call}
-        {--sleep-interval= : Sleep time in milliseconds between destination batches }     
+        {--sleep-interval= : Sleeping time in milliseconds between destination batches }     
 
-        {--ssl-strict : Do not ignore ssl certificate issues when connecting with both source or destination} 
+        {--ssl-strict : Do not ignore SSL certificate issues when connecting with both source and destination} 
     ';
 
     /**
@@ -40,7 +40,8 @@ class createMigrationJob extends Command
      *
      * @var string
      */
-    protected $description = 'Command description';
+    protected $description = 'Use this command to create a Migration Job by providing date from, date to and all the information to connect with both source and destintation. 
+        You will receive a Migration Job ID that should be used for downloading and processing events.';
 
     /**
      * Create a new command instance.
@@ -70,23 +71,23 @@ class createMigrationJob extends Command
         }
 
         if ($this->argument('dateFrom') === null) {
-            $askFrom = $this->ask('Please, provide the date & hour to START the migration. Format: YYYYMMDD"T"HH Ex: 20211018T00 .');
+            $askFrom = $this->ask('Please, provide FROM date to start the migration. Format: YYYYMMDD"T"HH Ex: 20211018T00 .');
             $sourceConfig["dateFrom"] = $this->validateDateHour($askFrom);
         } else {
             $sourceConfig["dateFrom"] = $this->validateDateHour($this->argument('dateFrom'));
         }
         if (!$sourceConfig['dateFrom']) {
-            $this->error('Date from must have this format 20211231T00.. T00 to T23.');
+            $this->error('Date from must be in this format 20211231T00.. T00 to T23.');
             return -1;
         }
         if ($this->argument('dateTo') === null) {
-            $askTo = $this->ask('Please, provide the date & hour to END the migration. Format: YYYYMMDD"T"HH Ex: 20211018T00 .');
+            $askTo = $this->ask('Please, provide TO date & hour to END the migration. Format: YYYYMMDD"T"HH Ex: 20211018T00 .');
             $sourceConfig["dateTo"] = $this->validateDateHour($askTo);
         } else {
             $sourceConfig["dateTo"] = $this->validateDateHour($this->argument('dateTo'));
         }
         if (!$sourceConfig['dateTo']) {
-            $this->error('Date To must have this format 20211231T00.. T00 to T23.');
+            $this->error('Date To must be in this format 20211231T00.. T00 to T23.');
             return -1;
         }
         if ($this->option('aak') === null) {

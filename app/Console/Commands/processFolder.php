@@ -22,7 +22,7 @@ class processFolder extends Command
      *
      * @var string
      */
-    protected $description = 'Command description';
+    protected $description = 'Takes, translates and uploads all downloaded files for a specified Migration Job ';
 
     /**
      * Create a new command instance.
@@ -55,7 +55,7 @@ class processFolder extends Command
 
         $bar = $this->output->createProgressBar($fileCount);
 
-        $this->line("Proccessing files for Job: ".$this->argument('jobId'));
+        $this->line("Processing files for Job: ".$this->argument('jobId'));
         $bar->start();
         foreach ($allfiles as $file) {
             if (!$a2p->processFile($file, 'file://' . $bkevents)) {

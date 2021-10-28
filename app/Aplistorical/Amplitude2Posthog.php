@@ -37,6 +37,7 @@ class Amplitude2Posthog
 
     /**
      * Sets the SaveString param. Could be file://absoulte_path or sqlite://absolutepath
+     * Note: Currently only file:// is supported. sqlite pool comming soon
      * 
      * @param string $filepath
      * @param string $type='file'
@@ -281,7 +282,7 @@ class Amplitude2Posthog
         if ($retval !== 200) {
             if ($this->failedFile !== '') {
                 $this->saveFailed($payload);
-                Log::error("Failed batch because a response code " . $retval . ". Please check " . $this->failedFile);
+                Log::error("Failed batch. Response code was " . $retval . ". Please check " . $this->failedFile);
             } else {
                 Log::error("Failed batch::: $payload");
             }
@@ -319,8 +320,7 @@ class Amplitude2Posthog
         curl_close($ch);
 
         if (200 !== $responseCode) {
-            // Mierda, gestionar el error.
-            Log::error('La petición CURL ha devuelto un estado ' . $responseCode . ' con este texto ' . json_encode($httpResponse));
+            Log::error('The CURL call responded with bad response code ' . $responseCode . ' with this additional information ' . json_encode($httpResponse));
         }
         return $responseCode;
     }
