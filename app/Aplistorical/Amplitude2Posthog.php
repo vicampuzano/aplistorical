@@ -14,6 +14,7 @@ class Amplitude2Posthog
     protected $saveString;
     protected $saveType;
     protected $failedFile;
+    protected $ignoreEvents = array();
 
     /**
      * @param mixed $phPK
@@ -69,6 +70,18 @@ class Amplitude2Posthog
         return $this->failedFile = $filename;
     }
 
+
+    /**
+     * @param array $ignoreEvents
+     * 
+     * @return bool
+     */
+    public function setIgnoreEvents(array $ignoreEvents): bool
+    {
+        $this->ignoreEvents = $ignoreEvents;
+        return true;
+    }
+
     /**
      * Return true if $str starts with $startWith
      * @param string $str
@@ -94,10 +107,15 @@ class Amplitude2Posthog
         $lines = gzfile($file);
         $uindex = array();
         $count = 0;
+        $skippedCount = 0;
         foreach ($lines as $line) {
             $event = json_decode($line);
             if (!isset($event->user_id) || $event->user_id === '') {
                 Log::warning("Skipped line on file $file :::: $line");
+                continue;
+            }
+            if (count($this->ignoreEvents) > 0 && in_array($event->event_type, $this->ignoreEvents)) {
+                $skippedCount += 1;
                 continue;
             }
             if (!isset($uindex[$event->user_id])) {
@@ -107,7 +125,7 @@ class Amplitude2Posthog
             array_push($uindex[$event->user_id], $this->mapProperties($event));
             ++$count;
         }
-        Log::debug("Fully processed $count lines from $file . Now start processing events ...");
+        Log::debug("Fully processed $count lines from $file . $skippedCount lines skipped. Now start processing events ...");
 
         return $this->processEvents($uindex, ($this->saveString !== ''));
     }

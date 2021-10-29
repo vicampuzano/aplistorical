@@ -20,6 +20,8 @@ class createMigrationJob extends Command
         {sourceDriver=amplitude : Defines the data source driver. Currently only Amplitude is supported} 
         {destinationDriver=posthog : Defines the destination driver. Currently only Posthog is supported} 
 
+        {--ignore=* : Do not migrate this specific event name. You can include as many as you want. }
+
         {--aak= : Amplitude API Key} 
         {--ask= : Amplitude Secret Key} 
         {--preserve-sources : Do not delete downloaded files after processing it } 
@@ -112,6 +114,10 @@ class createMigrationJob extends Command
         }
         $destinationConfig["ssl_strict"] = ($this->option('ssl-strict') === null ? true : false);
 
+        if (is_array($this->option('ignore'))) {
+            $destinationConfig["ignoreEvents"] = $this->option('ignore');
+        }
+
         $newJob = new MigrationJobs();
         $newJob->source_config = $sourceConfig;
         $newJob->destination_config = $destinationConfig;
@@ -119,11 +125,11 @@ class createMigrationJob extends Command
         $newJob->preserve_sources = ($this->option('preserve-sources') === null ? false : true);
         $newJob->preserve_translations = ($this->option('preserve-translations') === null ? false : true);
         $newJob->parallelize_translations = ($this->option('do-not-parallelize') === null ? true : false);
-        if ($this->option('destination-batch')!==null && is_numeric($this->option('destination-batch')) && $this->option('destination-batch')>0) {
-            $newJob->destination_batch = $this->option('destination-batch');   
+        if ($this->option('destination-batch') !== null && is_numeric($this->option('destination-batch')) && $this->option('destination-batch') > 0) {
+            $newJob->destination_batch = $this->option('destination-batch');
         }
-        if ($this->option('sleep-interval')!==null && is_numeric($this->option('sleep-interval')) && $this->option('sleep-interval')>0) {
-            $newJob->sleep_interval = $this->option('sleep-interval');   
+        if ($this->option('sleep-interval') !== null && is_numeric($this->option('sleep-interval')) && $this->option('sleep-interval') > 0) {
+            $newJob->sleep_interval = $this->option('sleep-interval');
         }
         $newJob->save();
 
@@ -142,6 +148,11 @@ class createMigrationJob extends Command
 
     private function validateDateHour($date)
     {
-        return \DateTime::createFromFormat('Ymd\TH', $date)->format('Ymd\TH');
+        try {
+            return \DateTime::createFromFormat('Ymd\TH', $date)->format('Ymd\TH');
+        } catch (\Throwable $th) {
+            $this->error('Provided date is not in the format YYYYMMDDTHH. Remember T is a literal.');
+            die();
+        }
     }
 }
