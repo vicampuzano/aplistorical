@@ -91,17 +91,17 @@ class createMigrationJob extends Command
             return -1;
         }
         if ($this->option('aak') === null) {
-            $sourceConfig["aak"] = $this->ask('Please, provide Amplitude API Key.');
+            $sourceConfig["aak"] = $this->secret('Please, provide Amplitude API Key.');
         } else {
             $sourceConfig["aak"] = $this->option('aak');
         }
         if ($this->option('ask') === null) {
-            $sourceConfig["ask"] = $this->ask('Please, provide Amplitude Secret Key.');
+            $sourceConfig["ask"] = $this->secret('Please, provide Amplitude Secret Key.');
         } else {
             $sourceConfig["ask"] = $this->option('ask');
         }
         if ($this->option('ppk') === null) {
-            $destinationConfig["ppk"] = $this->ask('Please, provide a PostHog project API Key.');
+            $destinationConfig["ppk"] = $this->secret('Please, provide a PostHog project API Key.');
         } else {
             $destinationConfig["ppk"] = $this->option('ppk');
         }
