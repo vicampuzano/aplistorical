@@ -164,13 +164,13 @@ aplistorical:processFolder <jobId>
 | `-V`, `--version`  | Display this application version |
 
 ## Useful Links
-What is Posthog? 👉 [~PostHog - Open-Source Product Analytics~](https://posthog.com/)
+What is Posthog? 👉 [PostHog - Open-Source Product Analytics](https://posthog.com/)
 
-Learn how to deply a clean Laravel Sail installation 👉 [~Installation - Laravel - The PHP Framework For Web Artisans~](https://laravel.com/docs/8.x/installation#your-first-laravel-project)
+Learn how to deply a clean Laravel Sail installation 👉 [Installation - Laravel - The PHP Framework For Web Artisans](https://laravel.com/docs/8.x/installation#your-first-laravel-project)
 
-Laravel Sail Docs 👉 [~Laravel Sail - Laravel - The PHP Framework For Web Artisans~](https://laravel.com/docs/8.x/sail)
+Laravel Sail Docs 👉 [Laravel Sail - Laravel - The PHP Framework For Web Artisans](https://laravel.com/docs/8.x/sail)
 
-What is Metricool? 👉 [~Metricool~](https://metricool.com/)
+What is Metricool? 👉 [Metricool](https://metricool.com/)
 
 
 
@@ -179,4 +179,4 @@ What is Metricool? 👉 [~Metricool~](https://metricool.com/)
   <img src="https://metricool.com/wp-content/uploads/metricool-logo-reduced-21.png" />
 </p>
 
-This tool is created and maintained by Víctor Campuzano, Head of Growth at [~Metricool~](https://metricool.com) .
+This tool is created and maintained by Víctor Campuzano, Head of Growth at [Metricool](https://metricool.com) .
