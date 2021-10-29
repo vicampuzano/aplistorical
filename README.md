@@ -50,7 +50,7 @@ You can start the process by using:
 (php or sail) artisan aplistorical:processFolder {jobId}
 ```
 
-This command process all files downloaded from Amplitude, translates all events stored in them and sends the events to Posthog in batches defined by the `—destination-batch=XXXX` option for the `aplistorical:createMigrationJob`command.
+This command process all files downloaded from Amplitude, translates all events stored in them and sends the events to Posthog in batches defined by the `--destination-batch=XXXX` option for the `aplistorical:createMigrationJob`command.
 
 Every single file is deleted after be processed.
 
@@ -105,12 +105,12 @@ aplistorical:createMigrationJob [options] [--] [<dateFrom> [<dateTo> [<jobName> 
 **Options:**
 | Option | Description |
 | --- | --- |
-| `—aak[=AAK]` | Amplitude API Key. |
+| `--aak[=AAK]` | Amplitude API Key. |
 | `--ask[=ASK]` | Amplitude Secret Key |
 | `--preserve-sources` | Do not delete downloaded files after processing it |
 | `--ppk[=PPK]` | Posthog Project API Key |
-| `—piu[=PIU]` | Posthog Instance Url |
-|  `—preserve-translations` | Store translated events into a backup file |
+| `--piu[=PIU]` | Posthog Instance Url |
+| `--preserve-translations` | Store translated events into a backup file |
 | `--do-not-parallelize` | Disable parallel translation jobs. Note: parallelizing is currently not supported. |
 | `--destination-batch[=DESTINATION-BATCH]` | How many events should be sent per destination API call. _Default: 1000_ |
 | `--sleep-interval[=SLEEP-INTERVAL]` | Sleeping time in milliseconds between destination batches. _Default is 1000_ |
