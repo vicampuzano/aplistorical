@@ -82,7 +82,7 @@ We also use `$pageview` as the `event` in Posthog when the `event_type`equals `V
 
 ## Artisan Commands
 
-**### 🖲 aplistorical:createMigrationJob**
+### 🖲 aplistorical:createMigrationJob
 Use this command to create a Migration Job by providing date from, date to and all the information to connect with both source and destination. 
 
 You will receive a Migration Job ID that should be used for downloading and processing events.
