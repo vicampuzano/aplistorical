@@ -1,5 +1,5 @@
 # Aplistorical: Amplitude to Posthog migration tool
-_“Aplistorical" sounds like “ahistorical" because it prevents you to be lacking historical perspective or context._ 😬
+_“Aplistorical” sounds like “ahistorical” because it prevents you to be lacking historical perspective or context._ 😬
 
 This tool helps you migrate your historical data from Amplitude to Posthog.
 
@@ -36,7 +36,7 @@ You’ll be asked for all the information needed to create the Migration Job.
 You can also specify all the information using parameters and options. See bellow  `(or use the -h option)`  to a full description of this command.
 
 ### 2. Download all files using the Amplitude export API
-By using the command `sail artisan aplistorical:getFromAmplitude {jobIb}` command, a backup of all your Amplitude events will be downloaded and stored in the `storage/app/migrationJobs/{jobIb}/down/` folder.
+By using the command `(php or sail) artisan aplistorical:getFromAmplitude {jobIb}` command, a backup of all your Amplitude events will be downloaded and stored in the `storage/app/migrationJobs/{jobIb}/down/` folder.
 
 Depending on your events volume and the time range, this task takes a while for downloading and unzipping all files. 
 
@@ -54,7 +54,7 @@ This command process all files downloaded from Amplitude, translates all events 
 
 Every single file is deleted after be processed.
 
-**Note:** failed batches are stored in `storage/app/migrationsJobs/{jobId}/up/failedSends.json`so you can review it and resend using your own code or any tool like ([Postman](https://www.postman.com/)).
+**Note:** failed batches are stored in `storage/app/migrationsJobs/{jobId}/up/failedSends.json` so you can review it and resend using your own code or any tool like  ([Postman](https://www.postman.com/)).
 
 
 ## Mapped properties
@@ -77,12 +77,12 @@ Every Amplitude event is translated to a Posthog event using this properties con
 ### Considerations
 We create a single $idenfity event in Posthog for **every distinct user on a single file** using the traits includes in the `user_properties`properties of this user’s 1st event in this file.
 
-We also use `$pageview`as the `event`in Posthog when the `event_type`equals `Viewed Page`, `PageVisited`or `pagevisited`in Amplitude.
+We also use `$pageview` as the `event` in Posthog when the `event_type`equals `Viewed Page`, `PageVisited`or `pagevisited` in Amplitude.
 
 
 ## Artisan Commands
 
-### 🖲 aplistorical:createMigrationJob
+**### 🖲 aplistorical:createMigrationJob**
 Use this command to create a Migration Job by providing date from, date to and all the information to connect with both source and destination. 
 
 You will receive a Migration Job ID that should be used for downloading and processing events.
@@ -95,11 +95,11 @@ aplistorical:createMigrationJob [options] [--] [<dateFrom> [<dateTo> [<jobName> 
 **Arguments:**
 | Argument | Description |
 | --- | --- |
- `dateFrom` | Start date in format YYYYMMDD"T"HH (Ex. 20211018T00) A complete day is between T00 and T23 |
-| `dateTo` | End date in format YYYYMMDDTHH (Ex. 20211018"T"23) A complete day is between T00 and T23 |
-| `jobName` |  Job name ... _[default: "UntitledMigration”]_
-| `sourceDriver` | Defines the data source driver. Currently only Amplitude is supported _[default: "amplitude”]_ |
-| `destinationDriver` | Defines the destination driver. Currently only Posthog is supported _[default: "posthog”]_ |
+ `dateFrom` | Start date in format YYYYMMDD”T”HH (Ex. 20211018T00) A complete day is between T00 and T23 |
+| `dateTo` | End date in format YYYYMMDDTHH (Ex. 20211018”T”23) A complete day is between T00 and T23 |
+| `jobName` |  Job name … _[default: “UntitledMigration”]_
+| `sourceDriver` | Defines the data source driver. Currently only Amplitude is supported _[default: “amplitude”]_ |
+| `destinationDriver` | Defines the destination driver. Currently only Posthog is supported _[default: “posthog”]_ |
 
 
 **Options:**
@@ -112,7 +112,7 @@ aplistorical:createMigrationJob [options] [--] [<dateFrom> [<dateTo> [<jobName> 
 | `--piu[=PIU]` | Posthog Instance Url |
 | `--preserve-translations` | Store translated events into a backup file |
 | `--do-not-parallelize` | Disable parallel translation jobs. Note: parallelizing is currently not supported. |
-| `--destination-batch[=DESTINATION-BATCH]` | How many events should be sent per destination API call. _Default: 1000_ |
+| `--destination-batch[=DESTINATION-BATCH]` | How many events should be sent per destination API call. *_Default: 1000_* |
 | `--sleep-interval[=SLEEP-INTERVAL]` | Sleeping time in milliseconds between destination batches. _Default is 1000_ |
 | `--ignore=eventName` | Do not migrate this specific event name. You can include as many as you want. |
 | `--ssl-strict` | Do not ignore SSL certificate issues when connecting with both source and destination. |
@@ -164,19 +164,19 @@ aplistorical:processFolder <jobId>
 | `-V`, `--version`  | Display this application version |
 
 ## Useful Links
-What is Posthog? 👉 [PostHog - Open-Source Product Analytics](https://posthog.com/)
+What is Posthog? 👉 [~PostHog - Open-Source Product Analytics~](https://posthog.com/)
 
-Learn how to deply a clean Laravel Sail installation 👉 [Installation - Laravel - The PHP Framework For Web Artisans](https://laravel.com/docs/8.x/installation#your-first-laravel-project)
+Learn how to deply a clean Laravel Sail installation 👉 [~Installation - Laravel - The PHP Framework For Web Artisans~](https://laravel.com/docs/8.x/installation#your-first-laravel-project)
 
-Laravel Sail Docs 👉 [Laravel Sail - Laravel - The PHP Framework For Web Artisans](https://laravel.com/docs/8.x/sail)
+Laravel Sail Docs 👉 [~Laravel Sail - Laravel - The PHP Framework For Web Artisans~](https://laravel.com/docs/8.x/sail)
 
-What is Metricool? 👉 [Metricool](https://metricool.com/)
+What is Metricool? 👉 [~Metricool~](https://metricool.com/)
 
 
 
 ## Credits
 <p align=“center”>
-  <img src=“https://metricool.com/wp-content/uploads/metricool-logo-reduced-21.png" />
+  <img src="https://metricool.com/wp-content/uploads/metricool-logo-reduced-21.png" />
 </p>
 
-This tool is created and maintained by Víctor Campuzano, Head of Growth at [Metricool](https://metricool.com) .
+This tool is created and maintained by Víctor Campuzano, Head of Growth at [~Metricool~](https://metricool.com) .
