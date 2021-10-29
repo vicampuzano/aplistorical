@@ -3,7 +3,7 @@ _“Aplistorical" sounds like “ahistorical" because it prevents you to be lack
 
 This tool helps you migrate your historical data from Amplitude to Posthog.
 
-It is based on Laravel.
+It is based on Laravel so you can use it as a normal Laravel project or inside a Docker image using `sail` commands.
 
 ## Important notes before start
 **This tool is currently in beta**. We have done some tests in production environments and everything was fine. But, we can’t ensure you this will happen in your particular scenario. Please, **check the complete migration in a testing environment before doing it in the production one**.
@@ -28,7 +28,7 @@ Also, a Migration Job stores the API keys and other information needed to do all
 
 **To create a migration job:**
 ```
-sail artisan aplistorical:createMigrationJob
+(php or sail) artisan aplistorical:createMigrationJob
 ```
 
 You’ll be asked for all the information needed to create the Migration Job.
@@ -47,7 +47,7 @@ Since you have all files downloaded and unzipped, you should process them to tra
 
 You can start the process by using:
 ```
-sail artisan aplistorical:processFolder {jobId}
+(php or sail) artisan aplistorical:processFolder {jobId}
 ```
 
 This command process all files downloaded from Amplitude, translates all events stored in them and sends the events to Posthog in batches defined by the `—destination-batch=XXXX` option for the `aplistorical:createMigrationJob`command.
@@ -113,7 +113,8 @@ aplistorical:createMigrationJob [options] [--] [<dateFrom> [<dateTo> [<jobName> 
 |  `—preserve-translations` | Store translated events into a backup file |
 | `--do-not-parallelize` | Disable parallel translation jobs. Note: parallelizing is currently not supported. |
 | `--destination-batch[=DESTINATION-BATCH]` | How many events should be sent per destination API call. _Default: 1000_ |
-| `—sleep-interval[=SLEEP-INTERVAL]` | Sleeping time in milliseconds between destination batches. _Default is 1000_ |
+| `--sleep-interval[=SLEEP-INTERVAL]` | Sleeping time in milliseconds between destination batches. _Default is 1000_ |
+| `--ignore=eventName` | Do not migrate this specific event name. You can include as many as you want. |
 | `--ssl-strict` | Do not ignore SSL certificate issues when connecting with both source and destination. |
 | `-h`, `--help`  | Display help for the given command. When no command is given display help for the list command |
 | `-q`, `--quiet`  | Do not output any message |
