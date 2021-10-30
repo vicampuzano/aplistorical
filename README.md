@@ -173,9 +173,29 @@ Laravel Sail Docs 👉 [Laravel Sail - Laravel - The PHP Framework For Web Artis
 What is Metricool? 👉 [Metricool](https://metricool.com/)
 
 
+## Contributing
+Any feedback, help, or contribution will be welcome.
+
+I’m not a professional programmer, so it will be easy to find mistakes and not optimized code. Your contributions will become my learning. Thanks!
+
+You can find the critical code in these files:
+* **app/Aplistorical/SdAmplitude.php** Code for downloading files from Amplitude.
+* **app/Aplistorical/Amplitude2Posthog.php** Code for translations and uploading events to Posthog.
+* **app/Console/Commands/** Console artisan commands (createMigrationJob, getFromAmplitude, processFolder).
+* **app/Models/MigrationJobs.php** Model for MigrationJobs.
+* database/migrations/ Migrations for creating de database table.
+
+**Note:** Aplistorical stores the migration jobs into a SQLite file placed in `storage/aplistorical/db/database.sqlite` . Please, make sure this file exists or create it by this command.
+
+```
+touch storage/aplistorical/db/database.sqlite
+(sail or php) artisan migrate:fresh
+```
+
+
 
 ## Credits
-<p align=“center”>
+<p align="center">
   <img src="https://metricool.com/wp-content/uploads/metricool-logo-reduced-21.png" />
 </p>
 
