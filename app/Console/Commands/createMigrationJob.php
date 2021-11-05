@@ -23,6 +23,7 @@ class createMigrationJob extends Command
         {--aak= : Amplitude Api Key} 
         {--ask= : Amplitude Secret Key} 
         {--preserve-sources : Do not delete downloaded files after process it } 
+        {--user-properties-mode= : Use root to put user_properties as event properties. Use propertie to put user_properties under user_properties inside the event properties. } 
 
         {--ppk= : Posthog Project Api Key} 
         {--piu= : Posthog Instance Url} 
@@ -110,6 +111,9 @@ class createMigrationJob extends Command
             $destinationConfig["piu"] = $this->option('piu');
         }
         $destinationConfig["ssl_strict"] = ($this->option('ssl-strict') === null ? true : false);
+        if ($this->option('user-properties-mode')!==null && ($this->option('user-properties-mode')==='root' || $this->option('user-properties-mode')==='property')) {
+            $destinationConfig['userPropertiesMode'] = $this->option('user-properties-mode');
+        }
 
         $newJob = new MigrationJobs();
         $newJob->source_config = $sourceConfig;

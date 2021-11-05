@@ -15,6 +15,7 @@ class Amplitude2Posthog
     protected $saveString;
     protected $saveType;
     protected $failedFile;
+    protected $userPropertiesMode;
 
     /**
      * @param mixed $phPK
@@ -67,6 +68,21 @@ class Amplitude2Posthog
     public function setFailedFile(string $filename): bool
     {
         return $this->failedFile = $filename;
+    }
+
+
+    /**
+     * @param string $mode
+     * 
+     * @return bool
+     */
+    public function setUserPropertiesMode(string $mode): bool {
+        if ($mode === 'root' || $mode === 'property') {
+            $this->userPropertiesMode=$mode;
+            return true;
+        } else {
+            return false;
+        }
     }
 
     /**
@@ -205,9 +221,24 @@ class Amplitude2Posthog
             }
         }
         if (isset($amplitudeEvent->user_properties)) {
-            $PosthogEvent['properties']['$set'] = array();
-            foreach ($amplitudeEvent->user_properties as $clave => $valor) {
-                $PosthogEvent['properties']['$set'][$clave] = $valor;
+            switch ($this->userPropertiesMode) {
+                case 'root':
+                    foreach ($amplitudeEvent->user_properties as $clave => $valor) {
+                        $PosthogEvent['properties'][$clave] = $valor;
+                    }
+                    break;
+                case 'property':
+                    $PosthogEvent['properties']['user_properties'] = array();
+                    foreach ($amplitudeEvent->user_properties as $clave => $valor) {
+                        $PosthogEvent['properties']['user_properties'][$clave] = $valor;
+                    }
+                    break;
+                default:
+                    $PosthogEvent['properties']['$set'] = array();
+                    foreach ($amplitudeEvent->user_properties as $clave => $valor) {
+                        $PosthogEvent['properties']['$set'][$clave] = $valor;
+                    }
+                    break;
             }
         }
 

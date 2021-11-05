@@ -50,6 +50,9 @@ class processFolder extends Command
         if ($mj['preserve_translations']) {
             $a2p->setSaveString($bkevents);
         }
+        if ($mj['destination_config']['user-properties-mode']) {
+            $a2p->setUserPropertiesMode($mj['destination_config']['user-properties-mode']);
+        }
         $allfiles = $this->getAllFiles($folder);
         $fileCount = count($allfiles);
 
