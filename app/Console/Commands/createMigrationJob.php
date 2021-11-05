@@ -17,23 +17,26 @@ class createMigrationJob extends Command
         {dateFrom? : Start date in format YYYYMMDD"T"HH (Ex. 20211018T00) A complete day is between T00 and T23}
         {dateTo? : End date in format YYYYMMDDTHH (Ex. 20211018"T"23) A complete day is between T00 and T23} 
         {jobName=UntitledMigration : Job name ... } 
-        {sourceDriver=amplitude : It defines the data source driver. Currently only amplitude is supported} 
-        {destinationDriver=posthog : It defines the destination driver. Currently only posthog is supported} 
+        {sourceDriver=amplitude : Defines the data source driver. Currently only Amplitude is supported} 
+        {destinationDriver=posthog : Defines the destination driver. Currently only Posthog is supported} 
 
-        {--aak= : Amplitude Api Key} 
+        {--ignore=* : Do not migrate this specific event name. You can include as many as you want. }
+
+        {--aak= : Amplitude API Key} 
         {--ask= : Amplitude Secret Key} 
         {--preserve-sources : Do not delete downloaded files after process it } 
         {--user-properties-mode= : Use root to put user_properties as event properties. Use propertie to put user_properties under user_properties inside the event properties. } 
+        {--preserve-sources : Do not delete downloaded files after processing it } 
 
-        {--ppk= : Posthog Project Api Key} 
+        {--ppk= : Posthog Project API Key} 
         {--piu= : Posthog Instance Url} 
-        {--preserve-translations : Do not delete translated files after process it } 
-        {--do-not-parallelize : Disable parallel translation jobs } 
+        {--preserve-translations : Store translated events into a backup file } 
+        {--do-not-parallelize : Disable parallel translation jobs. Note: parallelizing is currently not supported. } 
 
         {--destination-batch= : How many events should be sent per destination API call}
-        {--sleep-interval= : Sleep time in milliseconds between destination batches }     
+        {--sleep-interval= : Sleeping time in milliseconds between destination batches }     
 
-        {--ssl-strict : Do not ignore ssl certificate issues when connecting with both source or destination} 
+        {--ssl-strict : Do not ignore SSL certificate issues when connecting with both source and destination} 
     ';
 
     /**
@@ -41,7 +44,8 @@ class createMigrationJob extends Command
      *
      * @var string
      */
-    protected $description = 'Command description';
+    protected $description = 'Use this command to create a Migration Job by providing date from, date to and all the information to connect with both source and destination. 
+        You will receive a Migration Job ID that should be used for downloading and processing events.';
 
     /**
      * Create a new command instance.
@@ -71,37 +75,37 @@ class createMigrationJob extends Command
         }
 
         if ($this->argument('dateFrom') === null) {
-            $askFrom = $this->ask('Please, provide the date & hour to START the migration. Format: YYYYMMDD"T"HH Ex: 20211018T00 .');
+            $askFrom = $this->ask('Please, provide FROM date to start the migration. Format: YYYYMMDD"T"HH Ex: 20211018T00 .');
             $sourceConfig["dateFrom"] = $this->validateDateHour($askFrom);
         } else {
             $sourceConfig["dateFrom"] = $this->validateDateHour($this->argument('dateFrom'));
         }
         if (!$sourceConfig['dateFrom']) {
-            $this->error('Date from must have this format 20211231T00.. T00 to T23.');
+            $this->error('Date from must be in this format 20211231T00.. T00 to T23.');
             return -1;
         }
         if ($this->argument('dateTo') === null) {
-            $askTo = $this->ask('Please, provide the date & hour to END the migration. Format: YYYYMMDD"T"HH Ex: 20211018T00 .');
+            $askTo = $this->ask('Please, provide TO date & hour to END the migration. Format: YYYYMMDD"T"HH Ex: 20211018T00 .');
             $sourceConfig["dateTo"] = $this->validateDateHour($askTo);
         } else {
             $sourceConfig["dateTo"] = $this->validateDateHour($this->argument('dateTo'));
         }
         if (!$sourceConfig['dateTo']) {
-            $this->error('Date To must have this format 20211231T00.. T00 to T23.');
+            $this->error('Date To must be in this format 20211231T00.. T00 to T23.');
             return -1;
         }
         if ($this->option('aak') === null) {
-            $sourceConfig["aak"] = $this->ask('Please, provide Amplitude API Key.');
+            $sourceConfig["aak"] = $this->secret('Please, provide Amplitude API Key.');
         } else {
             $sourceConfig["aak"] = $this->option('aak');
         }
         if ($this->option('ask') === null) {
-            $sourceConfig["ask"] = $this->ask('Please, provide Amplitude Secret Key.');
+            $sourceConfig["ask"] = $this->secret('Please, provide Amplitude Secret Key.');
         } else {
             $sourceConfig["ask"] = $this->option('ask');
         }
         if ($this->option('ppk') === null) {
-            $destinationConfig["ppk"] = $this->ask('Please, provide a PostHog project API Key.');
+            $destinationConfig["ppk"] = $this->secret('Please, provide a PostHog project API Key.');
         } else {
             $destinationConfig["ppk"] = $this->option('ppk');
         }
@@ -115,6 +119,10 @@ class createMigrationJob extends Command
             $destinationConfig['userPropertiesMode'] = $this->option('user-properties-mode');
         }
 
+        if (is_array($this->option('ignore'))) {
+            $destinationConfig["ignoreEvents"] = $this->option('ignore');
+        }
+
         $newJob = new MigrationJobs();
         $newJob->source_config = $sourceConfig;
         $newJob->destination_config = $destinationConfig;
@@ -122,11 +130,11 @@ class createMigrationJob extends Command
         $newJob->preserve_sources = ($this->option('preserve-sources') === null ? false : true);
         $newJob->preserve_translations = ($this->option('preserve-translations') === null ? false : true);
         $newJob->parallelize_translations = ($this->option('do-not-parallelize') === null ? true : false);
-        if ($this->option('destination-batch')!==null && is_numeric($this->option('destination-batch')) && $this->option('destination-batch')>0) {
-            $newJob->destination_batch = $this->option('destination-batch');   
+        if ($this->option('destination-batch') !== null && is_numeric($this->option('destination-batch')) && $this->option('destination-batch') > 0) {
+            $newJob->destination_batch = $this->option('destination-batch');
         }
-        if ($this->option('sleep-interval')!==null && is_numeric($this->option('sleep-interval')) && $this->option('sleep-interval')>0) {
-            $newJob->sleep_interval = $this->option('sleep-interval');   
+        if ($this->option('sleep-interval') !== null && is_numeric($this->option('sleep-interval')) && $this->option('sleep-interval') > 0) {
+            $newJob->sleep_interval = $this->option('sleep-interval');
         }
         $newJob->save();
 
@@ -145,6 +153,11 @@ class createMigrationJob extends Command
 
     private function validateDateHour($date)
     {
-        return \DateTime::createFromFormat('Ymd\TH', $date)->format('Ymd\TH');
+        try {
+            return \DateTime::createFromFormat('Ymd\TH', $date)->format('Ymd\TH');
+        } catch (\Throwable $th) {
+            $this->error('Provided date is not in the format YYYYMMDDTHH. Remember T is a literal.');
+            die();
+        }
     }
 }

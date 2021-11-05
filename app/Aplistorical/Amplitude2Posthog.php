@@ -3,7 +3,6 @@
 namespace App\Aplistorical;
 
 use Illuminate\Support\Facades\Log;
-use Illuminate\Support\Facades\Storage;
 
 class Amplitude2Posthog
 {
@@ -16,6 +15,7 @@ class Amplitude2Posthog
     protected $saveType;
     protected $failedFile;
     protected $userPropertiesMode;
+    protected $ignoreEvents = array();
 
     /**
      * @param mixed $phPK
@@ -38,6 +38,7 @@ class Amplitude2Posthog
 
     /**
      * Sets the SaveString param. Could be file://absoulte_path or sqlite://absolutepath
+     * Note: Currently only file:// is supported. sqlite pool comming soon
      * 
      * @param string $filepath
      * @param string $type='file'
@@ -84,6 +85,16 @@ class Amplitude2Posthog
             return false;
         }
     }
+    
+     /* @param array $ignoreEvents
+     * 
+     * @return bool
+     */
+    public function setIgnoreEvents(array $ignoreEvents): bool
+    {
+        $this->ignoreEvents = $ignoreEvents;
+        return true;
+    }
 
     /**
      * Return true if $str starts with $startWith
@@ -110,10 +121,15 @@ class Amplitude2Posthog
         $lines = gzfile($file);
         $uindex = array();
         $count = 0;
+        $skippedCount = 0;
         foreach ($lines as $line) {
             $event = json_decode($line);
             if (!isset($event->user_id) || $event->user_id === '') {
                 Log::warning("Skipped line on file $file :::: $line");
+                continue;
+            }
+            if (count($this->ignoreEvents) > 0 && in_array($event->event_type, $this->ignoreEvents)) {
+                $skippedCount += 1;
                 continue;
             }
             if (!isset($uindex[$event->user_id])) {
@@ -123,7 +139,7 @@ class Amplitude2Posthog
             array_push($uindex[$event->user_id], $this->mapProperties($event));
             ++$count;
         }
-        Log::debug("Fully processed $count lines from $file . Now start processing events ...");
+        Log::debug("Fully processed $count lines from $file . $skippedCount lines skipped. Now start processing events ...");
 
         return $this->processEvents($uindex, ($this->saveString !== ''));
     }
@@ -179,7 +195,8 @@ class Amplitude2Posthog
             'event' => ($amplitudeEvent->event_type === 'Viewed  Page' || $amplitudeEvent->event_type === 'PageVisited' || $amplitudeEvent->event_type === 'pagevisited') ? '$pageview' : $amplitudeEvent->event_type,
             'properties' => array(
                 'distinct_id' => $amplitudeEvent->user_id,
-                'distinctId' => $amplitudeEvent->user_id
+                'distinctId' => $amplitudeEvent->user_id,
+                '$anon_distinct_id' == $amplitudeEvent['uuid']
             )
         );
         if (isset($amplitudeEvent->ip_address)) {
@@ -270,7 +287,8 @@ class Amplitude2Posthog
             'type' => 'identify',
             'properties' => array(
                 'distinct_id' => $amplitudeEvent->user_id,
-                'distinctId' => $amplitudeEvent->user_id
+                'distinctId' => $amplitudeEvent->user_id,
+                '$anon_distinct_id' == $amplitudeEvent['uuid']
             )
         );
         if (isset($amplitudeEvent->ip_address)) {
@@ -312,7 +330,7 @@ class Amplitude2Posthog
         if ($retval !== 200) {
             if ($this->failedFile !== '') {
                 $this->saveFailed($payload);
-                Log::error("Failed batch because a response code " . $retval . ". Please check " . $this->failedFile);
+                Log::error("Failed batch. Response code was " . $retval . ". Please check " . $this->failedFile);
             } else {
                 Log::error("Failed batch::: $payload");
             }
@@ -350,8 +368,7 @@ class Amplitude2Posthog
         curl_close($ch);
 
         if (200 !== $responseCode) {
-            // Mierda, gestionar el error.
-            Log::error('La petición CURL ha devuelto un estado ' . $responseCode . ' con este texto ' . json_encode($httpResponse));
+            Log::error('The CURL call responded with bad response code ' . $responseCode . ' with this additional information ' . json_encode($httpResponse));
         }
         return $responseCode;
     }

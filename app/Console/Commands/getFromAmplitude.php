@@ -15,14 +15,14 @@ class getFromAmplitude extends Command
      * @var string
      */
     protected $signature = 'aplistorical:getFromAmplitude
-    {jobId : Job id to download}';
+    {jobId : Job id to download files from Amplitude}';
 
     /**
      * The console command description.
      *
      * @var string
      */
-    protected $description = 'Command description';
+    protected $description = 'Connects with Amplitude and downloads all data for a specified Migration Job';
 
     /**
      * Create a new command instance.
@@ -42,8 +42,8 @@ class getFromAmplitude extends Command
     public function handle()
     {
         $sdamp = new SdAmplitude($this->argument('jobId'));
-        $this->line("Ok, let's download all files ... It willl take a few minutes. Be patient.");
-        $this->line("Please, check the logs for debug info...");
+        $this->line("Ok, let's download all files ... It willl take a long while. Be patient.");
+        $this->line("You can check the log file for debugging info. You can use this command tail -f storage/logs/laravel.log");
         $sdamp->getData();
         $this->info("Process completed!");
         return Command::SUCCESS;
