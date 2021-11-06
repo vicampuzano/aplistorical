@@ -15,7 +15,8 @@ class processFolder extends Command
      * @var string
      */
     protected $signature = 'aplistorical:processFolder
-    {jobId : JobId to identify source folder and update project status }';
+    {jobId : JobId to identify source folder and update project status }
+    {--limit= : Maximum files to process in this execution. Default: all files.}';
 
     /**
      * The console command description.
@@ -59,9 +60,16 @@ class processFolder extends Command
         $allfiles = $this->getAllFiles($folder);
         $fileCount = count($allfiles);
 
-        $bar = $this->output->createProgressBar($fileCount);
+        if ($this->option('limit') !== null && is_numeric($this->option('limit')) && $this->option('limit') > 0) {
+            $filelimit = $this->option('limit');
+            $bar = $this->output->createProgressBar($filelimit);
+            $this->line("Processing " . $filelimit . " files for Job: " . $this->argument('jobId'));
+        } else {
+            $filelimit = 1000000;
+            $bar = $this->output->createProgressBar($fileCount);
+            $this->line("Processing " . $fileCount . "files for Job: " . $this->argument('jobId'));
+        }
 
-        $this->line("Processing files for Job: " . $this->argument('jobId'));
         $bar->start();
         foreach ($allfiles as $file) {
             if (!$a2p->processFile($file, 'file://' . $bkevents)) {
@@ -69,6 +77,9 @@ class processFolder extends Command
             }
             unlink($file);
             $bar->advance();
+            if (--$filelimit <= 0) {
+                break;
+            }
         }
 
         $bar->finish();
