@@ -86,7 +86,8 @@ class Amplitude2Posthog
         }
     }
     
-     /* @param array $ignoreEvents
+     /**
+     * @param array $ignoreEvents
      * 
      * @return bool
      */
