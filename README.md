@@ -77,6 +77,8 @@ Every Amplitude event is translated to a Posthog event using this properties con
 ### Considerations
 We create a single $idenfity event in Posthog for **every distinct user on a single file** using the traits includes in the `user_properties`properties of this user’s 1st event in this file.
 
+You can set `--user-properies-mode` to `root` or `property` to put Amplitude's user_properties as Posthog event properties (at root level or under user_properties inside the event properties, respectively).
+
 We also use `$pageview` as the `event` in Posthog when the `event_type`equals `Viewed Page`, `PageVisited`or `pagevisited` in Amplitude.
 
 
@@ -115,6 +117,7 @@ aplistorical:createMigrationJob [options] [--] [<dateFrom> [<dateTo> [<jobName> 
 | `--destination-batch[=DESTINATION-BATCH]` | How many events should be sent per destination API call. *_Default: 1000_* |
 | `--sleep-interval[=SLEEP-INTERVAL]` | Sleeping time in milliseconds between destination batches. _Default is 1000_ |
 | `--ignore=eventName` | Do not migrate this specific event name. You can include as many as you want. |
+| `--event-properties-mode=mode` | Put Amplitude's user_properties as event properties at root level (`root`) or under user_properties (`property`) |
 | `--ssl-strict` | Do not ignore SSL certificate issues when connecting with both source and destination. |
 | `-h`, `--help`  | Display help for the given command. When no command is given display help for the list command |
 | `-q`, `--quiet`  | Do not output any message |
@@ -159,6 +162,7 @@ aplistorical:processFolder <jobId>
 **Options:**
 | Option | Description |
 | --- | --- |
+| `--limit=X`  | Limit the number of files processed in this execution. |
 | `-h`, `--help`  | Display help for the given command. When no command is given display help for the list command |
 | `-q`, `--quiet`  | Do not output any message |
 | `-V`, `--version`  | Display this application version |

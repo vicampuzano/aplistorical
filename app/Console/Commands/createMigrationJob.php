@@ -25,7 +25,7 @@ class createMigrationJob extends Command
         {--aak= : Amplitude API Key} 
         {--ask= : Amplitude Secret Key} 
         {--preserve-sources : Do not delete downloaded files after process it } 
-        {--user-properties-mode= : Use root to put user_properties as event properties. Use propertie to put user_properties under user_properties inside the event properties. } 
+        {--user-properties-mode= : Use root to put user_properties as event properties. Use property to put user_properties under user_properties inside the event properties. } 
 
         {--ppk= : Posthog Project API Key} 
         {--piu= : Posthog Instance Url} 
