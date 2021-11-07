@@ -16,6 +16,7 @@ class Amplitude2Posthog
     protected $failedFile;
     protected $userPropertiesMode;
     protected $ignoreEvents = array();
+    protected $renameEvents = array();
 
     /**
      * @param mixed $phPK
@@ -77,16 +78,17 @@ class Amplitude2Posthog
      * 
      * @return bool
      */
-    public function setUserPropertiesMode(string $mode): bool {
+    public function setUserPropertiesMode(string $mode): bool
+    {
         if ($mode === 'root' || $mode === 'property') {
-            $this->userPropertiesMode=$mode;
+            $this->userPropertiesMode = $mode;
             return true;
         } else {
             return false;
         }
     }
-    
-     /**
+
+    /**
      * @param array $ignoreEvents
      * 
      * @return bool
@@ -94,6 +96,13 @@ class Amplitude2Posthog
     public function setIgnoreEvents(array $ignoreEvents): bool
     {
         $this->ignoreEvents = $ignoreEvents;
+        return true;
+    }
+
+
+    public function setRenameEvents(array $renameEvents): bool
+    {
+        $this->renameEvents = $renameEvents;
         return true;
     }
 
@@ -188,12 +197,15 @@ class Amplitude2Posthog
         if (!isset($amplitudeEvent->user_id) || $amplitudeEvent->user_id === '') {
             return false;
         }
+
+        $eventType = (count($this->renameEvents) > 0 && $this->renameEvents[$amplitudeEvent->event_type] !== null) ? $this->renameEvents[$amplitudeEvent->event_type] : $amplitudeEvent->event_type;
+
         $PosthogEvent = array(
             'distinctId' => $amplitudeEvent->user_id,
             'distinct_id' => $amplitudeEvent->user_id,
             'timestamp' => $convertedTimestamp,
             'type' => 'capture',
-            'event' => ($amplitudeEvent->event_type === 'Viewed  Page' || $amplitudeEvent->event_type === 'PageVisited' || $amplitudeEvent->event_type === 'pagevisited') ? '$pageview' : $amplitudeEvent->event_type,
+            'event' => ($eventType === 'Viewed  Page' || $eventType === 'PageVisited' || $eventType === 'pagevisited') ? '$pageview' : $eventType,
             'properties' => array(
                 'distinct_id' => $amplitudeEvent->user_id,
                 'distinctId' => $amplitudeEvent->user_id,

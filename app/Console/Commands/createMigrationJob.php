@@ -21,6 +21,7 @@ class createMigrationJob extends Command
         {destinationDriver=posthog : Defines the destination driver. Currently only Posthog is supported} 
 
         {--ignore=* : Do not migrate this specific event name. You can include as many as you want. }
+        {--rename=* : Rename events during migration. Use the format sourceEventName::DestEventName. Ex. completeRegistration::RegistrationCompleted. You can include as many as you want. }
 
         {--aak= : Amplitude API Key} 
         {--ask= : Amplitude Secret Key} 
@@ -114,12 +115,22 @@ class createMigrationJob extends Command
             $destinationConfig["piu"] = $this->option('piu');
         }
         $destinationConfig["ssl_strict"] = ($this->option('ssl-strict') === null ? true : false);
-        if ($this->option('user-properties-mode')!==null && ($this->option('user-properties-mode')==='root' || $this->option('user-properties-mode')==='property')) {
+        if ($this->option('user-properties-mode') !== null && ($this->option('user-properties-mode') === 'root' || $this->option('user-properties-mode') === 'property')) {
             $destinationConfig['userPropertiesMode'] = $this->option('user-properties-mode');
         }
 
         if (is_array($this->option('ignore'))) {
             $destinationConfig["ignoreEvents"] = $this->option('ignore');
+        }
+
+        if (is_array($this->option('rename'))) {
+            $destinationConfig['rename'] = array();
+            foreach ($this->option('rename') as $renamePair) {
+                $renameArray = explode('::', $renamePair);
+                if (count($renameArray) === 2) {
+                    $destinationConfig['rename'][$renameArray[0]] = $renameArray[1];
+                }
+            }
         }
 
         $newJob = new MigrationJobs();

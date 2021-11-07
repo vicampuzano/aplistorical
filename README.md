@@ -117,6 +117,7 @@ aplistorical:createMigrationJob [options] [--] [<dateFrom> [<dateTo> [<jobName> 
 | `--destination-batch[=DESTINATION-BATCH]` | How many events should be sent per destination API call. *_Default: 1000_* |
 | `--sleep-interval[=SLEEP-INTERVAL]` | Sleeping time in milliseconds between destination batches. _Default is 1000_ |
 | `--ignore=eventName` | Do not migrate this specific event name. You can include as many as you want. |
+| `--rename=sourceEventName::destEventName` | Rename events during migration. Use the format sourceEventName::DestEventName. Ex. completeRegistration::RegistrationCompleted. You can include as many as you want. |
 | `--event-properties-mode=mode` | Put Amplitude's user_properties as event properties at root level (`root`) or under user_properties (`property`) |
 | `--ssl-strict` | Do not ignore SSL certificate issues when connecting with both source and destination. |
 | `-h`, `--help`  | Display help for the given command. When no command is given display help for the list command |
