@@ -51,14 +51,14 @@ class processFolder extends Command
         if ($mj['preserve_translations']) {
             $a2p->setSaveString($bkevents);
         }
-        if ($mj['destination_config']['user-properties-mode']) {
+        if (array_key_exists('user-properties-mode',$mj['destination_config'])) {
             $a2p->setUserPropertiesMode($mj['destination_config']['user-properties-mode']);
         }
-        if ($mj['destinationConfig']['ignoreEvents']) {
-            $a2p->setIgnoreEvents($mj['destinationConfig']['ignoreEvents']);
+        if (array_key_exists('ignoreEvents',$mj['destination_config'])) {
+            $a2p->setIgnoreEvents($mj['destination_config']['ignoreEvents']);
         }
-        if ($mj['destinationConfig']['rename']) {
-            $a2p->setRenameEvents($mj['destinationConfig']['rename']);
+        if (array_key_exists('rename',$mj['destination_config'])) {
+            $a2p->setRenameEvents($mj['destination_config']['rename']);
         }
         $allfiles = $this->getAllFiles($folder);
         $fileCount = count($allfiles);
@@ -72,7 +72,6 @@ class processFolder extends Command
             $bar = $this->output->createProgressBar($fileCount);
             $this->line("Processing " . $fileCount . "files for Job: " . $this->argument('jobId'));
         }
-
         $bar->start();
         foreach ($allfiles as $file) {
             if (!$a2p->processFile($file, 'file://' . $bkevents)) {

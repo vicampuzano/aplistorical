@@ -198,7 +198,7 @@ class Amplitude2Posthog
             return false;
         }
 
-        $eventType = (count($this->renameEvents) > 0 && $this->renameEvents[$amplitudeEvent->event_type] !== null) ? $this->renameEvents[$amplitudeEvent->event_type] : $amplitudeEvent->event_type;
+        $eventType = (count($this->renameEvents) > 0 && array_key_exists($amplitudeEvent->event_type,$this->renameEvents)) ? $this->renameEvents[$amplitudeEvent->event_type] : $amplitudeEvent->event_type;
 
         $PosthogEvent = array(
             'distinctId' => $amplitudeEvent->user_id,
@@ -209,7 +209,7 @@ class Amplitude2Posthog
             'properties' => array(
                 'distinct_id' => $amplitudeEvent->user_id,
                 'distinctId' => $amplitudeEvent->user_id,
-                '$anon_distinct_id' == $amplitudeEvent['uuid']
+                '$anon_distinct_id' == $amplitudeEvent->uuid
             )
         );
         if (isset($amplitudeEvent->ip_address)) {
@@ -301,7 +301,7 @@ class Amplitude2Posthog
             'properties' => array(
                 'distinct_id' => $amplitudeEvent->user_id,
                 'distinctId' => $amplitudeEvent->user_id,
-                '$anon_distinct_id' == $amplitudeEvent['uuid']
+                '$anon_distinct_id' == $amplitudeEvent->uuid
             )
         );
         if (isset($amplitudeEvent->ip_address)) {
