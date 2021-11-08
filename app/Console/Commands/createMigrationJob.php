@@ -110,7 +110,7 @@ class createMigrationJob extends Command
             $destinationConfig["ppk"] = $this->option('ppk');
         }
         if ($this->option('piu') === null) {
-            $destinationConfig["piu"] = $this->ask('Please, provide a PostHog Instance Url.');
+            $destinationConfig["piu"] = 'https://app.posthog.com';
         } else {
             $destinationConfig["piu"] = $this->option('piu');
         }
