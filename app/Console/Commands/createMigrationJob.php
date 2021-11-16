@@ -21,7 +21,7 @@ class createMigrationJob extends Command
         {destinationDriver=posthog : Defines the destination driver. Currently only Posthog is supported} 
 
         {--ignore=* : Do not migrate this specific event name. You can include as many as you want. }
-        {--rename=* : Rename events during migration. Use the format sourceEventName::DestEventName. Ex. completeRegistration::RegistrationCompleted. You can include as many as you want. }
+        {--renameEvent=* : Rename events during migration. Use the format sourceEventName::DestEventName. Ex. completeRegistration::RegistrationCompleted. You can include as many as you want. }
 
         {--aak= : Amplitude API Key} 
         {--ask= : Amplitude Secret Key} 
@@ -123,12 +123,12 @@ class createMigrationJob extends Command
             $destinationConfig["ignoreEvents"] = $this->option('ignore');
         }
 
-        if (is_array($this->option('rename'))) {
-            $destinationConfig['rename'] = array();
-            foreach ($this->option('rename') as $renamePair) {
+        if (is_array($this->option('renameEvent'))) {
+            $destinationConfig['renameEvents'] = array();
+            foreach ($this->option('renameEvent') as $renamePair) {
                 $renameArray = explode('::', $renamePair);
                 if (count($renameArray) === 2) {
-                    $destinationConfig['rename'][$renameArray[0]] = $renameArray[1];
+                    $destinationConfig['renameEvents'][$renameArray[0]] = $renameArray[1];
                 }
             }
         }

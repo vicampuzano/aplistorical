@@ -57,8 +57,8 @@ class processFolder extends Command
         if (array_key_exists('ignoreEvents',$mj['destination_config'])) {
             $a2p->setIgnoreEvents($mj['destination_config']['ignoreEvents']);
         }
-        if (array_key_exists('rename',$mj['destination_config'])) {
-            $a2p->setRenameEvents($mj['destination_config']['rename']);
+        if (array_key_exists('renameEvents',$mj['destination_config'])) {
+            $a2p->setRenameEvents($mj['destination_config']['renameEvents']);
         }
         $allfiles = $this->getAllFiles($folder);
         $fileCount = count($allfiles);
