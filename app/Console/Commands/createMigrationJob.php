@@ -22,6 +22,7 @@ class createMigrationJob extends Command
 
         {--ignore=* : Do not migrate this specific event name. You can include as many as you want. }
         {--renameEvent=* : Rename events during migration. Use the format sourceEventName::DestEventName. Ex. completeRegistration::RegistrationCompleted. You can include as many as you want. }
+        {--renameProperty=* : Rename properties during migration. Use the format sourcePropertyName::DestPropertyName. Ex. fLanding::first-landing. You can include as many as you want. }
 
         {--aak= : Amplitude API Key} 
         {--ask= : Amplitude Secret Key} 
